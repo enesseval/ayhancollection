@@ -41,7 +41,7 @@ Ya da GitHub'a yükleyip vercel.com → Add New → Project → repo'yu seçin, 
 3. Authentication → Hooks yerine en basit yol: yönetici kullanıcıyı Authentication → Users'tan oluşturun, sonra SQL Editor'de
    `update auth.users set raw_app_meta_data = raw_app_meta_data || '{"role":"admin"}' where email = 'sizin@eposta.com';`
 4. Project Settings → API'den URL, anon key ve service_role key'i Vercel ortam değişkenlerine ekleyip yeniden deploy edin.
-5. İlk yönetici girişinde iki adımlı doğrulama (TOTP) kurulumu istenir.
+5. Yönetici e-posta ve şifreyle giriş yapar. İsterseniz `ADMIN_REQUIRE_MFA=true` ile Authenticator (TOTP) kodu zorunlu hale getirilebilir.
 6. İsteğe bağlı: Database → Extensions'tan `pg_cron` açıp migration dosyasının sonundaki zamanlanmış görevleri çalıştırın.
 
 ## iyzico

@@ -101,11 +101,14 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   }
 }
 
-/** Admin oturumu + (Supabase modunda) MFA aal2 zorunluluğu. */
+/**
+ * Admin oturumu. İki adımlı doğrulama (TOTP) varsayılan olarak KAPALI;
+ * ADMIN_REQUIRE_MFA=true ortam değişkeniyle Supabase modunda zorunlu hale getirilebilir.
+ */
 export async function getAdmin(): Promise<{ user: SessionUser | null; needsMfa: boolean }> {
   const user = await getSessionUser();
   if (!user || user.role !== "admin") return { user: null, needsMfa: false };
-  if (features.supabase) {
+  if (features.supabase && env.adminRequireMfa) {
     const sb = await supabaseServer();
     const { data } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
     if (data?.currentLevel !== "aal2") return { user, needsMfa: true };

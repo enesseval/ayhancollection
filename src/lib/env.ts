@@ -36,6 +36,9 @@ export const env = {
   // Demo mod giriş bilgileri (Supabase bağlanana kadar)
   demoAdminEmail: (e.DEMO_ADMIN_EMAIL || "admin@ayseayhan.demo").toLowerCase(),
   demoAdminPassword: e.DEMO_ADMIN_PASSWORD || "",
+
+  // Yönetici için TOTP iki adımlı doğrulama (varsayılan kapalı)
+  adminRequireMfa: e.ADMIN_REQUIRE_MFA === "true",
 };
 
 export const features = {
