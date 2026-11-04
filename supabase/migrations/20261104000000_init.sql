@@ -443,6 +443,7 @@ revoke execute on function public.create_order(jsonb) from public, anon, authent
 revoke execute on function public.confirm_payment(uuid, jsonb) from public, anon, authenticated;
 revoke execute on function public.fail_order(uuid, text) from public, anon, authenticated;
 revoke execute on function public.release_expired_reservations() from public, anon, authenticated;
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
 grant execute on function public.create_order(jsonb) to service_role;
 grant execute on function public.confirm_payment(uuid, jsonb) to service_role;
 grant execute on function public.fail_order(uuid, text) to service_role;

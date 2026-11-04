@@ -49,13 +49,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </aside>
       <div className="min-w-0">
-        {(isDemoData || !features.iyzico || !features.r2) && (
+        {(isDemoData || !features.iyzico) && (
           <div className="border-b border-blush bg-blush-soft px-4 py-2 text-xs">
             <b>Demo mod:</b>{" "}
             {[
               isDemoData && "veriler bellekte (Supabase bağlanınca kalıcı olur)",
               !features.iyzico && "ödemeler simülasyon",
-              !features.r2 && "yüklenen görseller geçici (R2 bağlanınca kalıcı olur)",
+              !features.r2 && !features.supabase && "yüklenen görseller geçici",
             ]
               .filter(Boolean)
               .join(" · ")}

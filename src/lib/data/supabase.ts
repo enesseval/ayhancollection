@@ -285,7 +285,7 @@ export const supabaseRepo: Repo = {
       await db()
         .from("orders")
         .select(ORDER_SELECT)
-        .or(`user_id.eq.${userId},email.eq.${email.toLowerCase().replace(/[,()]/g, "")}`)
+        .or(`user_id.eq.${userId},email.eq."${email.toLowerCase().replace(/[",()\\]/g, "")}"`)
         .order("created_at", { ascending: false })
         .limit(50),
     ) as any[];
@@ -302,8 +302,8 @@ export const supabaseRepo: Repo = {
     let query = db().from("orders").select(ORDER_SELECT).order("created_at", { ascending: false }).limit(filter.limit ?? 200);
     if (filter.status) query = query.eq("status", filter.status);
     if (filter.q) {
-      const s = filter.q.replace(/[,()%]/g, "").trim();
-      query = query.or(`order_no.ilike.%${s}%,email.ilike.%${s}%`);
+      const s = filter.q.replace(/[^\p{L}\p{N}@._-]/gu, "").trim();
+      if (s) query = query.or(`order_no.ilike.*${s}*,email.ilike.*${s}*`);
     }
     return (check(await query) as any[]).map(mapOrder);
   },

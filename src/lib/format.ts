@@ -18,12 +18,21 @@ export function formatDate(iso: string, withTime = false): string {
 
 export const MEDIA_WIDTHS = [240, 480, 960, 1600] as const;
 
+/** R2 kullanılıyorsa NEXT_PUBLIC_MEDIA_BASE_URL; yoksa Supabase Storage'ın public "media" bucket'ı. */
+export function mediaBaseUrl(): string {
+  const explicit = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
+  if (explicit) return explicit.replace(/\/$/, "");
+  const sb = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (sb) return `${sb.replace(/\/$/, "")}/storage/v1/object/public/media`;
+  return "/media";
+}
+
 /** Depolama anahtarından boyut ekli WebP URL'si üretir. Vercel görsel dönüşümü kullanılmaz. */
 export function mediaUrl(key: string, width: number): string {
   const w = MEDIA_WIDTHS.find((x) => x >= width) ?? MEDIA_WIDTHS[MEDIA_WIDTHS.length - 1];
   if (key.startsWith("seed/")) return `/media/${key}-${w}.webp`;
   if (key.startsWith("mem/")) return `/api/media/${key}-${w}.webp`;
-  const base = (process.env.NEXT_PUBLIC_MEDIA_BASE_URL || "/media").replace(/\/$/, "");
+  const base = mediaBaseUrl();
   return `${base}/${key}-${w}.webp`;
 }
 

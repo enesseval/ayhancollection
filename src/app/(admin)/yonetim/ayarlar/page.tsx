@@ -8,7 +8,7 @@ export default async function AdminSettings() {
   const integrations = [
     ["Veritabanı (Supabase)", features.supabase, "NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY"],
     ["Ödeme (iyzico)", features.iyzico, "IYZICO_API_KEY, IYZICO_SECRET_KEY, IYZICO_BASE_URL"],
-    ["Görsel deposu (Cloudflare R2)", features.r2, "R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, NEXT_PUBLIC_MEDIA_BASE_URL"],
+    [features.r2 ? "Görsel deposu (Cloudflare R2)" : "Görsel deposu (Supabase Storage)", features.r2 || features.supabase, "Supabase bağlanınca otomatik; R2 için R2_* değişkenleri"],
     ["E-posta (Resend)", features.resend, "RESEND_API_KEY, MAIL_FROM"],
     ["Rate limit (Upstash)", features.upstash, "UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN"],
     ["Bot koruması (Turnstile)", features.turnstile, "TURNSTILE_SECRET_KEY, NEXT_PUBLIC_TURNSTILE_SITE_KEY"],

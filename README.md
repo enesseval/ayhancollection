@@ -8,7 +8,7 @@ Site, hiçbir anahtar girilmeden **demo modda** tam çalışır: örnek ürünle
 | --- | --- | --- |
 | Supabase | Bellek içi demo veri (sunucu yeniden başlayınca sıfırlanır) | Kalıcı Postgres + Supabase Auth + RLS |
 | iyzico | Demo 3D Secure ekranı | iyzico Checkout Form (3DS, taksit) + webhook |
-| Cloudflare R2 | Yüklenen görseller sunucu belleğinde (geçici) | Kalıcı, ücretsiz trafikli görsel deposu |
+| Görsel deposu | Supabase yoksa sunucu belleğinde (geçici) | Supabase Storage `media` bucket'ı (varsayılan) veya R2 anahtarları girilirse Cloudflare R2 |
 | Resend | E-postalar sunucu loguna yazılır | Sipariş e-postaları gönderilir |
 | Upstash | Bellek içi rate limit | Dağıtık rate limit |
 | Turnstile | Kapalı | Ödeme formunda bot koruması |
@@ -37,7 +37,7 @@ Ya da GitHub'a yükleyip vercel.com → Add New → Project → repo'yu seçin, 
 ## Supabase'i bağlama (yeni hesap açıldıktan sonra)
 
 1. Supabase'te yeni proje oluşturun (bölge: Frankfurt `eu-central-1`).
-2. SQL Editor'de sırasıyla çalıştırın: `supabase/migrations/20261104000000_init.sql`, ardından `supabase/seed.sql`.
+2. SQL Editor'de sırasıyla çalıştırın: `supabase/migrations/` içindeki dosyalar (tarih sırasıyla), ardından `supabase/seed.sql`.
 3. Authentication → Hooks yerine en basit yol: yönetici kullanıcıyı Authentication → Users'tan oluşturun, sonra SQL Editor'de
    `update auth.users set raw_app_meta_data = raw_app_meta_data || '{"role":"admin"}' where email = 'sizin@eposta.com';`
 4. Project Settings → API'den URL, anon key ve service_role key'i Vercel ortam değişkenlerine ekleyip yeniden deploy edin.
@@ -52,7 +52,7 @@ Sandbox: sandbox-merchant.iyzipay.com → Ayarlar → API anahtarları. Webhook 
 
 - Admin, tarayıcıda 2000 px / JPEG %85'e ön sıkıştırılmış görseli yükler (Vercel 4,5 MB gövde limiti).
 - Sunucu `sharp` ile EXIF'i siler, 4:5 kırpar, 240/480/960/1600 px WebP (q72) ve ~30 byte ThumbHash üretir.
-- Dosyalar R2'ye içerik hash'li adla, `immutable` önbellekle yazılır. Veritabanına yalnız anahtar + boyut + thumbhash gider.
+- Dosyalar Supabase Storage'a (R2 tanımlıysa R2'ye) içerik hash'li adla, `immutable` önbellekle yazılır. Veritabanına yalnız anahtar + boyut + thumbhash gider.
 - `next/image` özel loader ile hazır boyutları sunar: **Vercel görsel dönüşümü sıfır**.
 - Demo ürün görselleri `node scripts/generate-seed-media.ts` ile aynı hattan üretilir (20 ürün ≈ 2 MB).
 
