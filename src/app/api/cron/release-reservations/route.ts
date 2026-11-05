@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { repo } from "@/lib/data";
-import { env } from "@/lib/env";
+import { env, features } from "@/lib/env";
+import { db } from "@/lib/data/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -13,5 +14,6 @@ export async function GET(req: NextRequest) {
     return new NextResponse(null, { status: 401 });
   }
   const released = await repo.releaseExpiredReservations();
+  if (features.supabase) await db().rpc("auth_throttle_prune").then(({ error }) => error && console.error("[cron] prune", error.message));
   return NextResponse.json({ released });
 }

@@ -9,7 +9,7 @@ import { filterProducts, newOrderNo } from "./shared";
 // bu yüzden her çağrı uygulama katmanında yetkilendirilir. İstemciye bu anahtar asla gitmez.
 
 let _admin: SupabaseClient | null = null;
-function db(): SupabaseClient {
+export function db(): SupabaseClient {
   if (!_admin) {
     _admin = createClient(env.supabaseUrl, env.supabaseServiceKey, {
       auth: { persistSession: false, autoRefreshToken: false },

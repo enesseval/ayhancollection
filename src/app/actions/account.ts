@@ -1,7 +1,8 @@
 "use server";
 import { redirect } from "next/navigation";
 import { login, logout, register } from "@/lib/auth";
-import { rateLimit } from "@/lib/rate-limit";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { LOGIN_POLICY, clearFails, lockedFor, minutes, registerFail } from "@/lib/login-throttle";
 import { loginSchema, orderLookupSchema, registerSchema } from "@/lib/validation";
 import { loadOrderByNo, orderToken } from "@/lib/order-access";
 
@@ -25,8 +26,23 @@ export async function loginAction(_: FormState, fd: FormData): Promise<FormState
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error.issues), values };
   const rl = await rateLimit("login");
   if (!rl.ok) return { error: `Çok fazla deneme. ${rl.retryAfter} sn sonra tekrar deneyin.`, values };
+
+  const emailKey = `email:${parsed.data.email.toLowerCase()}`;
+  const ipKey = `ip:${await clientIp()}`;
+  const locked = Math.max(await lockedFor(emailKey), await lockedFor(ipKey));
+  if (locked > 0) {
+    // Kilitliyken şifre hiç denenmez (doğru şifre bile kabul edilmez)
+    return { error: `Çok fazla hatalı deneme yapıldı. Güvenliğiniz için giriş ${minutes(locked)} dakika kapatıldı.`, values };
+  }
+
   const res = await login(parsed.data.email, parsed.data.password);
-  if (!res.ok) return { error: res.error, values };
+  if (!res.ok) {
+    const [byEmail, byIp] = await Promise.all([registerFail(emailKey, LOGIN_POLICY.email), registerFail(ipKey, LOGIN_POLICY.ip)]);
+    const lock = Math.max(byEmail, byIp);
+    if (lock > 0) return { error: `Çok fazla hatalı deneme yapıldı. Güvenliğiniz için giriş ${minutes(lock)} dakika kapatıldı.`, values };
+    return { error: res.error, values };
+  }
+  await clearFails(emailKey);
   redirect(safeNext(fd.get("next"), res.user.role === "admin" ? "/yonetim" : "/hesabim"));
 }
 
