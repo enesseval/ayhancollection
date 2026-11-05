@@ -36,6 +36,7 @@ export async function loginAction(_: FormState, fd: FormData): Promise<FormState
   }
 
   const res = await login(parsed.data.email, parsed.data.password);
+  if (!res.ok && res.systemError) return { error: res.error, values };
   if (!res.ok) {
     const [byEmail, byIp] = await Promise.all([registerFail(emailKey, LOGIN_POLICY.email), registerFail(ipKey, LOGIN_POLICY.ip)]);
     const lock = Math.max(byEmail, byIp);

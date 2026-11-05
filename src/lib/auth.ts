@@ -71,7 +71,9 @@ async function signSession(u: SessionUser) {
 }
 
 // ─────────────── Ortak API ───────────────
-export type AuthResult = { ok: true; user: SessionUser } | { ok: false; error: string; pendingConfirmation?: boolean };
+export type AuthResult =
+  | { ok: true; user: SessionUser }
+  | { ok: false; error: string; pendingConfirmation?: boolean; /** şifre hatası değil, sistem kaynaklı */ systemError?: boolean };
 
 export async function getSessionUser(): Promise<SessionUser | null> {
   if (features.supabase) {
@@ -120,6 +122,11 @@ export async function login(email: string, password: string): Promise<AuthResult
   if (features.supabase) {
     const sb = await supabaseServer();
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    // Sistem kaynaklı hatalar hatalı şifre denemesi sayılmaz (kullanıcı haksız yere kilitlenmesin)
+    if (error && ["email_provider_disabled", "over_request_rate_limit", "unexpected_failure"].includes(error.code ?? "")) {
+      console.error("[auth] signIn", error.code);
+      return { ok: false, systemError: true, error: "Giriş şu an yapılamıyor. Lütfen biraz sonra tekrar deneyin." };
+    }
     // Doğrulanmamış hesap: şifre doğru olduğunda döner, hesap varlığını sızdırmaz
     if (error?.code === "email_not_confirmed")
       return { ok: false, error: "E-posta adresiniz henüz doğrulanmadı. Gelen kutunuzdaki bağlantıya tıklayın." };
@@ -154,6 +161,7 @@ const SIGNUP_ERRORS: Record<string, string> = {
   over_email_send_rate_limit: "Çok fazla kayıt denemesi yapıldı. Lütfen biraz sonra tekrar deneyin.",
   over_request_rate_limit: "Çok fazla deneme yapıldı. Lütfen biraz sonra tekrar deneyin.",
   signup_disabled: "Şu an yeni üyelik alınmıyor.",
+  email_provider_disabled: "Şu an yeni üyelik alınmıyor. Üye olmadan sipariş verebilirsiniz.",
 };
 
 export async function register(fullName: string, email: string, password: string): Promise<AuthResult> {
