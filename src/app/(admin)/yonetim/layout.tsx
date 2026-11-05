@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { LayoutDashboard, Package, ShoppingBag, Ticket, Settings, ExternalLink, Mail } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Ticket, Settings, ExternalLink, Mail, LogOut } from "lucide-react";
 import { getAdmin } from "@/lib/auth";
 import { isDemoData } from "@/lib/data";
 import { features } from "@/lib/env";
@@ -41,6 +41,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/" target="_blank" className="flex shrink-0 items-center gap-2.5 rounded px-3 py-2.5 text-sm text-muted hover:bg-canvas">
             <ExternalLink className="h-4 w-4" strokeWidth={1.6} /> Mağazayı aç
           </Link>
+          {/* Mobilde yan panel alt kısmı gizli: çıkış burada */}
+          <form action={logoutAction} className="shrink-0 lg:hidden">
+            <button className="flex items-center gap-2.5 rounded px-3 py-2.5 text-sm text-muted hover:bg-canvas">
+              <LogOut className="h-4 w-4" strokeWidth={1.6} /> Çıkış
+            </button>
+          </form>
         </nav>
         <div className="hidden px-4 pt-6 text-xs text-muted lg:block">
           <p className="truncate">{user.email}</p>
