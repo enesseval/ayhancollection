@@ -80,6 +80,7 @@ export function AuthForms({ next, demoHint }: { next: string; demoHint: string |
           </label>
           <Err msg={regState?.fieldErrors?.acceptKvkk} />
           {regState?.error && <p role="alert" className="field-error">{regState.error}</p>}
+          {regState?.notice && <p role="status" className="rounded bg-canvas p-3 text-sm text-success">{regState.notice}</p>}
           <Submit pending={regPending}>Üye ol</Submit>
         </form>
       )}

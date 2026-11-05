@@ -71,7 +71,7 @@ async function signSession(u: SessionUser) {
 }
 
 // ─────────────── Ortak API ───────────────
-export type AuthResult = { ok: true; user: SessionUser } | { ok: false; error: string };
+export type AuthResult = { ok: true; user: SessionUser } | { ok: false; error: string; pendingConfirmation?: boolean };
 
 export async function getSessionUser(): Promise<SessionUser | null> {
   if (features.supabase) {
@@ -120,6 +120,9 @@ export async function login(email: string, password: string): Promise<AuthResult
   if (features.supabase) {
     const sb = await supabaseServer();
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    // Doğrulanmamış hesap: şifre doğru olduğunda döner, hesap varlığını sızdırmaz
+    if (error?.code === "email_not_confirmed")
+      return { ok: false, error: "E-posta adresiniz henüz doğrulanmadı. Gelen kutunuzdaki bağlantıya tıklayın." };
     if (error || !data.user) return { ok: false, error: "E-posta veya şifre hatalı" };
     const role = data.user.app_metadata?.role === "admin" ? "admin" : "customer";
     return {
@@ -141,6 +144,18 @@ export async function login(email: string, password: string): Promise<AuthResult
   return { ok: true, user };
 }
 
+// Supabase hata kodları → kullanıcıya gösterilecek mesaj
+const SIGNUP_ERRORS: Record<string, string> = {
+  user_already_exists: "Bu e-posta ile kayıtlı bir hesap var. Giriş yapmayı deneyin.",
+  email_exists: "Bu e-posta ile kayıtlı bir hesap var. Giriş yapmayı deneyin.",
+  weak_password: "Şifre çok zayıf. Daha uzun ve tahmin edilmesi zor bir şifre seçin.",
+  email_address_invalid: "Bu e-posta adresine doğrulama e-postası gönderilemedi. Adresi kontrol edin.",
+  email_address_not_authorized: "Doğrulama e-postası şu an gönderilemiyor. Lütfen biraz sonra tekrar deneyin.",
+  over_email_send_rate_limit: "Çok fazla kayıt denemesi yapıldı. Lütfen biraz sonra tekrar deneyin.",
+  over_request_rate_limit: "Çok fazla deneme yapıldı. Lütfen biraz sonra tekrar deneyin.",
+  signup_disabled: "Şu an yeni üyelik alınmıyor.",
+};
+
 export async function register(fullName: string, email: string, password: string): Promise<AuthResult> {
   if (features.supabase) {
     const sb = await supabaseServer();
@@ -149,8 +164,12 @@ export async function register(fullName: string, email: string, password: string
       password,
       options: { data: { full_name: fullName }, emailRedirectTo: `${env.siteUrl}/hesabim` },
     });
-    if (error) return { ok: false, error: "Kayıt tamamlanamadı. Bu e-posta zaten kayıtlı olabilir." };
-    if (!data.session) return { ok: false, error: "E-postanıza gönderilen bağlantı ile hesabınızı doğrulayın." };
+    if (error) {
+      console.warn("[auth] signUp", error.code, error.status);
+      return { ok: false, error: SIGNUP_ERRORS[error.code ?? ""] ?? "Kayıt şu an tamamlanamadı. Lütfen biraz sonra tekrar deneyin." };
+    }
+    if (!data.session)
+      return { ok: false, pendingConfirmation: true, error: "Kaydınız alındı. E-postanıza gönderilen bağlantıya tıklayarak hesabınızı doğrulayın, ardından giriş yapın." };
     return { ok: true, user: { id: data.user!.id, email, fullName, role: "customer" } };
   }
   const users = demoUsers();

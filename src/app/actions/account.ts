@@ -6,7 +6,7 @@ import { LOGIN_POLICY, clearFails, lockedFor, minutes, registerFail } from "@/li
 import { loginSchema, orderLookupSchema, registerSchema } from "@/lib/validation";
 import { loadOrderByNo, orderToken } from "@/lib/order-access";
 
-export type FormState = { error?: string; fieldErrors?: Record<string, string>; values?: Record<string, string> } | null;
+export type FormState = { error?: string; notice?: string; fieldErrors?: Record<string, string>; values?: Record<string, string> } | null;
 
 function fieldErrors(issues: { path: PropertyKey[]; message: string }[]) {
   const out: Record<string, string> = {};
@@ -58,6 +58,7 @@ export async function registerAction(_: FormState, fd: FormData): Promise<FormSt
   const rl = await rateLimit("register");
   if (!rl.ok) return { error: "Çok fazla deneme. Lütfen biraz sonra tekrar deneyin.", values };
   const res = await register(parsed.data.fullName, parsed.data.email, parsed.data.password);
+  if (!res.ok && res.pendingConfirmation) return { notice: res.error, values };
   if (!res.ok) return { error: res.error, values };
   redirect(safeNext(fd.get("next"), "/hesabim"));
 }
