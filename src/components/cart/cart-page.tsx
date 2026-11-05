@@ -20,6 +20,8 @@ export function Summary({
   const coupon = useCart((s) => s.coupon);
   const setCoupon = useCart((s) => s.setCoupon);
   const [code, setCode] = useState(coupon);
+  const couponMsg = useCart((s) => s.couponError);
+  const applied = !!priced?.couponCode && priced.couponCode === coupon;
   return (
     <div className={`space-y-3 text-sm transition-opacity ${pending ? "opacity-60" : ""}`}>
       {showCoupon && (
@@ -43,7 +45,7 @@ export function Summary({
               autoComplete="off"
             />
           </div>
-          {coupon ? (
+          {applied ? (
             <button
               type="button"
               className="btn-outline"
@@ -59,8 +61,8 @@ export function Summary({
           )}
         </form>
       )}
-      {priced?.couponError && coupon && <p className="field-error" role="alert">{priced.couponError}</p>}
-      {priced?.couponCode && <p className="text-success">&quot;{priced.couponCode}&quot; kuponu uygulandı.</p>}
+      {couponMsg && <p className="field-error" role="alert">{couponMsg}</p>}
+      {applied && <p className="text-success">&quot;{priced.couponCode}&quot; kuponu uygulandı.</p>}
       <dl className="space-y-2 border-t border-line pt-3">
         <div className="flex justify-between">
           <dt>Ara toplam</dt>

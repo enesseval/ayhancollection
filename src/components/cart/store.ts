@@ -21,6 +21,9 @@ type CartState = {
   items: CartItem[];
   open: boolean;
   coupon: string;
+  /** Sunucunun reddettiği kuponun hata mesajı (kalıcı değil) */
+  couponError: string | null;
+  rejectCoupon: (msg: string) => void;
   add: (item: CartItem) => void;
   setQty: (variantId: string, qty: number) => void;
   remove: (variantId: string) => void;
@@ -36,6 +39,8 @@ export const useCart = create<CartState>()(
       items: [],
       open: false,
       coupon: "",
+      couponError: null,
+      rejectCoupon: (msg) => set({ coupon: "", couponError: msg }),
       add: (item) =>
         set((s) => {
           const existing = s.items.find((i) => i.variantId === item.variantId);
@@ -53,7 +58,7 @@ export const useCart = create<CartState>()(
       remove: (variantId) => set((s) => ({ items: s.items.filter((i) => i.variantId !== variantId) })),
       clear: () => set({ items: [], coupon: "" }),
       setOpen: (open) => set({ open }),
-      setCoupon: (coupon) => set({ coupon }),
+      setCoupon: (coupon) => set({ coupon, couponError: null }),
       replaceFromServer: (server) =>
         set((s) => ({
           items: s.items

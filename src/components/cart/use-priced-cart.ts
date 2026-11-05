@@ -10,6 +10,7 @@ export function usePricedCart() {
   const items = useCart((s) => s.items);
   const coupon = useCart((s) => s.coupon);
   const replaceFromServer = useCart((s) => s.replaceFromServer);
+  const rejectCoupon = useCart((s) => s.rejectCoupon);
   const [priced, setPriced] = useState<PricedCartView | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -21,6 +22,8 @@ export function usePricedCart() {
     start(async () => {
       const res = await priceCartAction({ lines: items.map((i) => ({ variantId: i.variantId, qty: i.qty })), coupon: coupon || undefined });
       setPriced(res);
+      // Geçersiz kupon sepette tutulmaz; sadece hata mesajı gösterilir
+      if (coupon && !res.couponCode && res.couponError) rejectCoupon(res.couponError);
       const changed =
         res.removed.length > 0 ||
         res.lines.some((l) => {

@@ -245,6 +245,11 @@ export const supabaseRepo: Repo = {
     check(await db().from("orders").update({ payment_token: token }).eq("id", orderId));
   },
 
+  async getOrderByPaymentToken(token) {
+    const row = check(await db().from("orders").select(ORDER_SELECT).eq("payment_token", token).maybeSingle());
+    return row ? mapOrder(row) : null;
+  },
+
   async markOrderPaid(orderId, payment) {
     const order = await this.getOrderById(orderId);
     if (!order) return null;

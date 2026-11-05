@@ -69,6 +69,7 @@ export interface Repo {
   // Sipariş
   createOrder(input: CreateOrderInput): Promise<Order>;
   setOrderPaymentInit(orderId: string, token: string): Promise<void>;
+  getOrderByPaymentToken(token: string): Promise<Order | null>;
   markOrderPaid(orderId: string, payment: PaymentInfo): Promise<Order | null>;
   failOrder(orderId: string, reason: string): Promise<void>;
   getOrderById(id: string): Promise<Order | null>;

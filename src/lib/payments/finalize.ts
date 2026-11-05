@@ -12,11 +12,15 @@ export type FinalizeResult = { ok: true; order: Order } | { ok: false; order: Or
  * Callback ve webhook aynı fonksiyonu kullanır; işlem idempotenttir.
  */
 export async function finalizeIyzicoToken(token: string): Promise<FinalizeResult> {
-  const r = await retrieveCheckoutForm(token);
-  const orderId = r.conversationId;
-  if (!orderId) return { ok: false, order: null, reason: r.errorMessage || "Ödeme bulunamadı" };
-  const order = await repo.getOrderById(orderId);
-  if (!order) return { ok: false, order: null, reason: "Sipariş bulunamadı" };
+  // Sipariş, ödeme başlatılırken kaydedilen token ile bulunur (iyzico retrieve yanıtı conversationId'yi
+  // ancak istekte gönderilirse geri döndürür). Bulunamazsa basketId (= sipariş no) ile denenir.
+  let order = await repo.getOrderByPaymentToken(token);
+  const r = await retrieveCheckoutForm(token, order?.id);
+  if (!order && r.basketId) order = await repo.getOrderByNo(r.basketId);
+  if (!order) {
+    console.warn("[iyzico] token ile sipariş bulunamadı", r.status, r.errorMessage);
+    return { ok: false, order: null, reason: r.errorMessage || "Sipariş bulunamadı" };
+  }
 
   if (order.status === "paid" || order.status === "preparing" || order.status === "shipped" || order.status === "delivered") {
     return { ok: true, order };
@@ -24,6 +28,7 @@ export async function finalizeIyzicoToken(token: string): Promise<FinalizeResult
 
   const problem = isValidPaymentForOrder(r, order);
   if (problem) {
+    console.warn("[iyzico] ödeme doğrulanamadı", order.orderNo, problem, r.paymentStatus, r.errorMessage);
     // 3DS henüz tamamlanmadıysa siparişi iptal etme; rezerv süresi dolunca otomatik iptal edilir
     if (r.paymentStatus === "FAILURE" || r.status === "failure") await repo.failOrder(order.id, `Ödeme başarısız: ${problem}`);
     return { ok: false, order, reason: problem };

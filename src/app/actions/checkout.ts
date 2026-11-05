@@ -35,7 +35,8 @@ export async function placeOrder(raw: unknown): Promise<CheckoutState> {
   if (!rl.ok) return { ok: false, error: `Çok fazla deneme yapıldı. ${Math.ceil(rl.retryAfter / 60)} dakika sonra tekrar deneyin.` };
   if (!(await verifyTurnstile(input.turnstileToken))) return { ok: false, error: "Güvenlik doğrulaması başarısız. Sayfayı yenileyip tekrar deneyin." };
 
-  // Fiyat ve stok SUNUCUDA yeniden hesaplanır
+  // Süresi dolmuş ödeme rezervlerini serbest bırak (stok geri gelsin), sonra fiyat ve stok SUNUCUDA yeniden hesaplanır
+  await repo.releaseExpiredReservations().catch((e) => console.error("[checkout] release", e));
   const totals = await priceCart(input.lines, input.couponCode || null);
   if (input.couponCode && totals.couponError) {
     return { ok: false, error: totals.couponError, fieldErrors: { couponCode: totals.couponError } };

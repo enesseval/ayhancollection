@@ -234,6 +234,12 @@ export const demoRepo: Repo = {
     store().paymentTokens.set(token, orderId);
   },
 
+  async getOrderByPaymentToken(token) {
+    const id = store().paymentTokens.get(token);
+    const o = id ? store().orders.find((x) => x.id === id) : undefined;
+    return o ? clone(o) : null;
+  },
+
   async markOrderPaid(orderId, payment) {
     const s = store();
     const o = s.orders.find((x) => x.id === orderId);
