@@ -8,7 +8,7 @@ import { env, features } from "./env";
 
 type Rule = { limit: number; windowSec: number };
 export const RULES = {
-  login: { limit: 5, windowSec: 60 },
+  login: { limit: 10, windowSec: 60 }, // hesap bazlı kilit ayrıca login-throttle.ts içinde
   register: { limit: 3, windowSec: 60 },
   coupon: { limit: 10, windowSec: 60 },
   checkout: { limit: 5, windowSec: 600 },
