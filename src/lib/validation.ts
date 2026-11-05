@@ -80,7 +80,7 @@ export const productFormSchema = z.object({
   fabric: z.string().trim().max(500),
   care: z.string().trim().max(500),
   categoryId: z.string().uuid("Kategori seçin"),
-  basePrice: z.number().int().min(0).max(100_000_00),
+  basePrice: z.number().int().min(100, "Fiyat en az 1 TL olmalı").max(100_000_00),
   compareAtPrice: z.number().int().min(0).max(100_000_00).nullable(),
   status: z.enum(["draft", "active", "archived"]),
   isNew: z.boolean(),
@@ -94,12 +94,16 @@ export const productFormSchema = z.object({
         color: z.string().trim().min(1).max(30),
         colorHex: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
         stock: z.number().int().min(0).max(100000),
-        priceOverride: z.number().int().min(0).nullable(),
+        priceOverride: z.number().int().min(100, "Özel fiyat en az 1 TL olmalı").nullable(),
       }),
     )
     .min(1, "En az bir varyant ekleyin")
     .max(120),
-});
+})
+  .refine((d) => d.compareAtPrice == null || d.compareAtPrice === 0 || d.compareAtPrice > d.basePrice, {
+    message: "Üstü çizili fiyat, satış fiyatından yüksek olmalı (indirimsiz ürünlerde boş bırakın)",
+    path: ["compareAtPrice"],
+  });
 
 export const couponFormSchema = z.object({
   id: z.string().uuid().optional().or(z.literal("")),
