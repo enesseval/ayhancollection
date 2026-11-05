@@ -32,7 +32,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     );
   }
 
-  const orders = await repo.listOrdersForUser(user.id, user.email);
+  const orders = await repo.listOrdersForUser(user.id);
   return (
     <div className="container-x max-w-4xl py-12">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -64,6 +64,10 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         </ul>
       )}
       <p className="mt-6 text-sm text-muted">
+        Üye olmadan (giriş yapmadan) verdiğiniz siparişler burada görünmez; onlar için{" "}
+        <Link href="/siparis-takip" className="underline">sipariş takibi</Link> sayfasını kullanın.
+      </p>
+      <p className="mt-2 text-sm text-muted">
         İade talebi için siparişin teslim tarihinden itibaren 14 gün içinde WhatsApp hattımıza sipariş numaranızla yazabilirsiniz.
       </p>
     </div>

@@ -285,12 +285,14 @@ export const supabaseRepo: Repo = {
     return row ? mapOrder(row) : null;
   },
 
-  async listOrdersForUser(userId, email) {
+  async listOrdersForUser(userId) {
     const rows = check(
       await db()
         .from("orders")
         .select(ORDER_SELECT)
-        .or(`user_id.eq.${userId},email.eq."${email.toLowerCase().replace(/[",()\\]/g, "")}"`)
+        // Yalnız hesaba bağlı siparişler. E-posta eşleşmesiyle misafir siparişleri GÖSTERİLMEZ:
+        // e-posta doğrulaması kapalıyken başkasının adresiyle üye olup siparişlerini görmek mümkün olurdu.
+        .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(50),
     ) as any[];

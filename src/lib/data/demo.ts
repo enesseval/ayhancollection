@@ -276,8 +276,9 @@ export const demoRepo: Repo = {
     return o ? clone(o) : null;
   },
 
-  async listOrdersForUser(userId, email) {
-    return clone(store().orders.filter((o) => o.userId === userId || o.email === email.toLowerCase()));
+  async listOrdersForUser(userId) {
+    // Yalnız hesaba bağlı siparişler (bkz. supabase sürücüsü)
+    return clone(store().orders.filter((o) => o.userId === userId));
   },
 
   async releaseExpiredReservations() {

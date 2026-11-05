@@ -74,7 +74,8 @@ export interface Repo {
   failOrder(orderId: string, reason: string): Promise<void>;
   getOrderById(id: string): Promise<Order | null>;
   getOrderByNo(orderNo: string): Promise<Order | null>;
-  listOrdersForUser(userId: string, email: string): Promise<Order[]>;
+  /** Yalnız hesaba bağlı (user_id) siparişler */
+  listOrdersForUser(userId: string): Promise<Order[]>;
   releaseExpiredReservations(): Promise<number>;
 
   // Admin
