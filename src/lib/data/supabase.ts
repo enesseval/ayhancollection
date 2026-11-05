@@ -484,7 +484,8 @@ export const supabaseRepo: Repo = {
         .limit(12),
     ) as any[]);
     return {
-      todayOrders: orders.filter((o) => istDay(o.created_at) === today).length,
+      // Yarım kalan (ödenmemiş) ve iptal edilen siparişler sayılmaz
+      todayOrders: orders.filter((o) => istDay(o.created_at) === today && !["pending_payment", "cancelled"].includes(o.status)).length,
       todayRevenue: paid.filter((o) => istDay(o.created_at) === today).reduce((a, o) => a + o.total, 0),
       monthRevenue: paid.filter((o) => istDay(o.created_at).startsWith(today.slice(0, 7))).reduce((a, o) => a + o.total, 0),
       awaitingTransfer: (check(await db().from("orders").select("id").eq("status", "awaiting_transfer")) as any[]).length,

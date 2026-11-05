@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { LayoutDashboard, Package, ShoppingBag, Ticket, Settings, ExternalLink } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Ticket, Settings, ExternalLink, Mail } from "lucide-react";
 import { getAdmin } from "@/lib/auth";
 import { isDemoData } from "@/lib/data";
 import { features } from "@/lib/env";
@@ -16,6 +16,7 @@ const NAV = [
   { href: "/yonetim/siparisler", label: "Siparişler", icon: ShoppingBag },
   { href: "/yonetim/urunler", label: "Ürünler", icon: Package },
   { href: "/yonetim/kuponlar", label: "Kuponlar", icon: Ticket },
+  { href: "/yonetim/e-postalar", label: "E-postalar", icon: Mail },
   { href: "/yonetim/ayarlar", label: "Ayarlar", icon: Settings },
 ];
 

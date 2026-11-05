@@ -24,6 +24,8 @@ export const env = {
 
   resendApiKey: e.RESEND_API_KEY || "",
   mailFrom: e.MAIL_FROM || "Ayşe Ayhan Collection <siparis@example.com>",
+  /** Yeni siparişlerde mağaza sahibine bildirim gidecek adres (boşsa gönderilmez) */
+  orderNotifyEmail: (e.ORDER_NOTIFY_EMAIL || "").trim(),
 
   upstashUrl: e.UPSTASH_REDIS_REST_URL || "",
   upstashToken: e.UPSTASH_REDIS_REST_TOKEN || "",

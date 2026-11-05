@@ -432,7 +432,7 @@ export const demoRepo: Repo = {
       .sort((a, b) => a.stock - b.stock)
       .slice(0, 12);
     return {
-      todayOrders: s.orders.filter((o) => istDay(new Date(o.createdAt)) === today).length,
+      todayOrders: s.orders.filter((o) => istDay(new Date(o.createdAt)) === today && o.status !== "pending_payment" && o.status !== "cancelled").length,
       todayRevenue: paid.filter((o) => istDay(new Date(o.createdAt)) === today).reduce((a, o) => a + o.total, 0),
       monthRevenue: paid.filter((o) => istDay(new Date(o.createdAt)).startsWith(month)).reduce((a, o) => a + o.total, 0),
       awaitingTransfer: s.orders.filter((o) => o.status === "awaiting_transfer").length,

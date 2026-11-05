@@ -4,7 +4,7 @@ import { repo } from "@/lib/data";
 import { requireAdmin, AdminError } from "@/lib/admin-guard";
 import { couponFormSchema, productFormSchema } from "@/lib/validation";
 import { deleteProductImage } from "@/lib/media/storage";
-import { sendOrderShipped } from "@/lib/email";
+import { sendOrderUpdate } from "@/lib/email";
 import type { OrderStatus, Settings } from "@/lib/types";
 import { z } from "zod";
 
@@ -88,6 +88,11 @@ export async function setOrderStatus(id: string, status: string): Promise<AdminR
     const o = await repo.updateOrderStatus(z.string().uuid().parse(id), s, actor);
     if (!o) return { ok: false as const, error: "Sipariş bulunamadı" };
     revalidatePath("/yonetim/siparisler");
+    // Müşteriye bildirim: teslim edildi / iptal
+    if (s === "delivered" || s === "cancelled") {
+      await sendOrderUpdate(s, o, await repo.getSettings()).catch((e) => console.error("[email]", e));
+      return { ok: true as const, message: "Durum güncellendi, müşteriye e-posta gönderildi" };
+    }
     return { ok: true as const, message: "Durum güncellendi" };
   }) as Promise<AdminResult>;
 }
@@ -98,7 +103,7 @@ export async function setOrderTracking(id: string, carrier: string, trackingNo: 
     const t = z.string().trim().regex(/^[A-Za-z0-9-]{4,40}$/, "Geçersiz takip no").parse(trackingNo);
     const o = await repo.setTracking(z.string().uuid().parse(id), c, t, actor);
     if (!o) return { ok: false as const, error: "Sipariş bulunamadı" };
-    await sendOrderShipped(o).catch(() => {});
+    await sendOrderUpdate("shipped", o, await repo.getSettings()).catch((e) => console.error("[email]", e));
     return { ok: true as const, message: "Kargo bilgisi kaydedildi, müşteriye bildirim gönderildi" };
   }) as Promise<AdminResult>;
 }
@@ -107,7 +112,8 @@ export async function confirmTransfer(id: string): Promise<AdminResult> {
   return guard(async (actor) => {
     const o = await repo.confirmTransfer(z.string().uuid().parse(id), actor);
     if (!o) return { ok: false as const, error: "Sipariş havale beklemiyor" };
-    return { ok: true as const, message: "Ödeme onaylandı" };
+    await sendOrderUpdate("transfer_confirmed", o, await repo.getSettings()).catch((e) => console.error("[email]", e));
+    return { ok: true as const, message: "Ödeme onaylandı, müşteriye e-posta gönderildi" };
   }) as Promise<AdminResult>;
 }
 
