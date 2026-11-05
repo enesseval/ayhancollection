@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { Menu, X, ChevronDown } from "lucide-react";
 
@@ -22,7 +23,8 @@ export function MobileNav({ items }: { items: Item[] }) {
       <button type="button" className="btn-ghost !px-2.5" aria-label="Menüyü aç" aria-expanded={open} onClick={() => setOpen(true)}>
         <Menu className="h-5 w-5" strokeWidth={1.5} />
       </button>
-      {open && (
+      {/* Header'daki backdrop-blur, fixed çocukları header kutusuna hapseder; bu yüzden body'ye portal */}
+      {open && createPortal(
         <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Menü">
           <div className="absolute inset-0 bg-ink/40" onClick={() => setOpen(false)} />
           <div className="absolute inset-y-0 left-0 flex w-[86%] max-w-sm flex-col bg-canvas shadow-xl">
@@ -67,7 +69,8 @@ export function MobileNav({ items }: { items: Item[] }) {
               </div>
             </nav>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
