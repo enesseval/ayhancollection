@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { useMemo, useRef, useState } from "react";
 import { Minus, Plus, MessageCircle, Ruler, X, Check } from "lucide-react";
-import { firstHexByColor, formatTRY, waLink } from "@/lib/format";
+import { firstHexByColor, formatTRY, minPrice, waLink } from "@/lib/format";
 import { useCart } from "@/components/cart/store";
 import type { Product } from "@/lib/types";
 
@@ -10,47 +10,10 @@ type Props = {
   product: Product;
   placeholders: Record<string, string | undefined>;
   whatsapp: string;
-  sizeChart: "tesettur" | "pijama" | "esarp" | "erkek";
+  /** Yönetimden atanmış beden tablosu (sunucuda işlenmiş); yoksa buton gösterilmez */
+  sizeChart: { name: string; body: React.ReactNode } | null;
   /** Sunucuda işlenmiş (Markdown) detay bölümleri */
   details: { title: string; body: React.ReactNode; filled: boolean }[];
-};
-
-const SIZE_CHARTS: Record<Props["sizeChart"], { head: string[]; rows: string[][]; note: string }> = {
-  tesettur: {
-    head: ["Beden", "Göğüs (cm)", "Bel (cm)", "Basen (cm)"],
-    rows: [
-      ["36", "86-90", "68-72", "94-98"],
-      ["38", "90-94", "72-76", "98-102"],
-      ["40", "94-98", "76-80", "102-106"],
-      ["42", "98-104", "80-86", "106-112"],
-      ["44", "104-110", "86-92", "112-118"],
-      ["46", "110-116", "92-98", "118-124"],
-    ],
-    note: "İki beden arasında kalırsanız bir büyük bedeni öneririz.",
-  },
-  pijama: {
-    head: ["Beden", "Göğüs (cm)", "Bel (cm)", "Basen (cm)"],
-    rows: [
-      ["S", "88-92", "70-74", "94-98"],
-      ["M", "92-98", "74-80", "98-104"],
-      ["L", "98-104", "80-86", "104-110"],
-      ["XL", "104-110", "86-92", "110-116"],
-      ["2XL", "110-118", "92-100", "116-124"],
-    ],
-    note: "Pamuklu ürünlerde ilk yıkamada %2-3 çekme olabilir.",
-  },
-  erkek: {
-    head: ["Beden", "Göğüs (cm)", "Boy (cm)"],
-    rows: [
-      ["S", "94-98", "70"],
-      ["M", "98-104", "72"],
-      ["L", "104-110", "74"],
-      ["XL", "110-116", "76"],
-      ["2XL", "116-124", "78"],
-    ],
-    note: "Ölçüler ürün üzerinden alınmıştır.",
-  },
-  esarp: { head: ["Ölçü"], rows: [["Ürün açıklamasındaki ölçüleri inceleyin"]], note: "" },
 };
 
 export function ProductView({ product, placeholders, whatsapp, sizeChart, details }: Props) {
@@ -71,7 +34,11 @@ export function ProductView({ product, placeholders, whatsapp, sizeChart, detail
   const add = useCart((s) => s.add);
 
   const variant = product.variants.find((v) => v.color === color && v.size === size) ?? null;
-  const price = variant?.priceOverride ?? product.basePrice;
+  const fromPrice = minPrice(product);
+  const varies = product.variants.some((v) => (v.priceOverride ?? product.basePrice) !== fromPrice);
+  // Beden seçilmeden en düşük fiyat ("…'den başlayan"), seçilince o bedenin fiyatı
+  const price = variant ? (variant.priceOverride ?? product.basePrice) : fromPrice;
+  const showFrom = !variant && varies;
   const discount =
     product.compareAtPrice && product.compareAtPrice > price ? Math.round((1 - price / product.compareAtPrice) * 100) : 0;
 
@@ -158,7 +125,10 @@ export function ProductView({ product, placeholders, whatsapp, sizeChart, detail
       <div className="lg:sticky lg:top-24 lg:self-start">
         <h1 className="text-3xl leading-tight sm:text-4xl">{product.name}</h1>
         <div className="mt-3 flex items-baseline gap-3">
-          <span className="text-2xl font-semibold">{formatTRY(price)}</span>
+          <span className="text-2xl font-semibold">
+            {formatTRY(price)}
+            {showFrom && <span className="text-base font-normal text-muted">&apos;den başlayan</span>}
+          </span>
           {discount > 0 && (
             <>
               <s className="text-muted">{formatTRY(product.compareAtPrice!)}</s>
@@ -196,7 +166,7 @@ export function ProductView({ product, placeholders, whatsapp, sizeChart, detail
             <p className="text-sm">
               Beden: <b>{size ?? "Seçin"}</b>
             </p>
-            {sizeChart !== "esarp" && (
+            {sizeChart && (
               <button type="button" onClick={() => setChartOpen(true)} className="flex items-center gap-1 text-sm underline underline-offset-4">
                 <Ruler className="h-4 w-4" /> Beden tablosu
               </button>
@@ -291,35 +261,17 @@ export function ProductView({ product, placeholders, whatsapp, sizeChart, detail
         </div>
       </div>
 
-      {chartOpen && (
+      {chartOpen && sizeChart && (
         <div className="fixed inset-0 z-[70] flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-label="Beden tablosu">
           <div className="absolute inset-0 bg-ink/40" onClick={() => setChartOpen(false)} />
           <div className="relative w-full max-w-lg rounded-t-xl bg-white p-6 sm:rounded-xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-2xl">Beden tablosu</h2>
+              <h2 className="text-2xl">{sizeChart.name}</h2>
               <button className="btn-ghost !px-2" onClick={() => setChartOpen(false)} aria-label="Kapat">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-line text-left">
-                  {SIZE_CHARTS[sizeChart].head.map((h) => (
-                    <th key={h} className="py-2 font-medium">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {SIZE_CHARTS[sizeChart].rows.map((r) => (
-                  <tr key={r[0]} className="border-b border-line">
-                    {r.map((c, i) => (
-                      <td key={i} className="py-2">{c}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <p className="mt-3 text-xs text-muted">{SIZE_CHARTS[sizeChart].note}</p>
+            <div className="max-h-[70vh] overflow-y-auto">{sizeChart.body}</div>
           </div>
         </div>
       )}

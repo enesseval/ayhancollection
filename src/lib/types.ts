@@ -48,6 +48,10 @@ export type Product = {
   isNew: boolean;
   isBestseller: boolean;
   vatRate: number;
+  /** Yönetimden atanmış beden tablosu (yoksa ürün sayfasında buton görünmez) */
+  sizeChartId: string | null;
+  /** Ödenmiş siparişlerdeki toplam satış adedi (Çok Satanlar sıralaması) */
+  soldCount: number;
   media: Media[];
   variants: Variant[];
   createdAt: string;
@@ -152,6 +156,8 @@ export type SessionUser = {
   fullName: string;
   role: "customer" | "admin";
 };
+
+export type SizeChart = { id: string; name: string; content: string; productCount?: number };
 
 export type ProductQuery = {
   categorySlug?: string;

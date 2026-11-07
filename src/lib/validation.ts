@@ -85,6 +85,7 @@ export const productFormSchema = z.object({
   status: z.enum(["draft", "active", "archived"]),
   isNew: z.boolean(),
   isBestseller: z.boolean(),
+  sizeChartId: z.string().uuid().nullable().or(z.literal("").transform(() => null)),
   variants: z
     .array(
       z.object({
@@ -126,3 +127,9 @@ export const TR_CITIES = [
   "Niğde", "Ordu", "Osmaniye", "Rize", "Sakarya", "Samsun", "Şanlıurfa", "Siirt", "Sinop", "Şırnak", "Sivas",
   "Tekirdağ", "Tokat", "Trabzon", "Tunceli", "Uşak", "Van", "Yalova", "Yozgat", "Zonguldak",
 ];
+
+export const sizeChartSchema = z.object({
+  id: z.string().uuid().optional().or(z.literal("")),
+  name: z.string().trim().min(2, "Tablo adı en az 2 karakter olmalı").max(60),
+  content: z.string().max(8000),
+});

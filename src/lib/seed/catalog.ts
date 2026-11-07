@@ -455,6 +455,8 @@ export const seedProducts: Product[] = productDefs.map((def, i) => {
     isNew: !!def.isNew,
     isBestseller: !!def.isBestseller,
     vatRate: 10,
+    sizeChartId: null,
+    soldCount: 0,
     media: seedMedia[def.slug] ?? [],
     variants: variantsFor(def),
     createdAt: new Date(baseDate + (def.isNew ? 25 : i) * 86400000 + i * 3600000).toISOString(),

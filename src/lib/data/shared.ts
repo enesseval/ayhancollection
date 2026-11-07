@@ -1,5 +1,6 @@
 import { randomInt } from "node:crypto";
 import type { Product, ProductQuery } from "../types";
+import { isNewProduct, minPrice } from "../format";
 
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // 0/O, 1/I yok
 
@@ -17,8 +18,11 @@ export function trLower(s: string) {
 }
 
 export function effectivePrice(p: Product) {
-  return p.basePrice;
+  return minPrice(p);
 }
+
+/** Çok satan: gerçekten satılmış ya da elle işaretlenmiş */
+const popularity = (p: Product) => p.soldCount * 1000 + (p.isBestseller ? 1 : 0);
 
 /** Bellek içi ürün filtreleme (demo sürücü ve testler için). */
 export function filterProducts(
@@ -34,21 +38,24 @@ export function filterProducts(
   }
   if (q.size) list = list.filter((p) => p.variants.some((v) => v.size === q.size && v.stock > 0));
   if (q.color) list = list.filter((p) => p.variants.some((v) => trLower(v.color) === trLower(q.color!)));
-  if (q.onlyNew) list = list.filter((p) => p.isNew);
-  if (q.onlyBestseller) list = list.filter((p) => p.isBestseller);
+  if (q.onlyNew) list = list.filter((p) => isNewProduct(p));
+  if (q.onlyBestseller) list = list.filter((p) => p.soldCount > 0 || p.isBestseller);
   if (q.onlyDiscounted) list = list.filter((p) => p.compareAtPrice && p.compareAtPrice > p.basePrice);
   switch (q.sort) {
     case "price_asc":
-      list = [...list].sort((a, b) => a.basePrice - b.basePrice);
+      list = [...list].sort((a, b) => minPrice(a) - minPrice(b));
       break;
     case "price_desc":
-      list = [...list].sort((a, b) => b.basePrice - a.basePrice);
+      list = [...list].sort((a, b) => minPrice(b) - minPrice(a));
       break;
     case "popular":
-      list = [...list].sort((a, b) => Number(b.isBestseller) - Number(a.isBestseller));
+      list = [...list].sort((a, b) => popularity(b) - popularity(a) || b.createdAt.localeCompare(a.createdAt));
       break;
     default:
-      list = [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      // Çok Satanlar sayfası satışa göre, diğerleri en yeniye göre
+      list = q.onlyBestseller
+        ? [...list].sort((a, b) => popularity(b) - popularity(a) || b.createdAt.localeCompare(a.createdAt))
+        : [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
   return q.limit ? list.slice(0, q.limit) : list;
 }

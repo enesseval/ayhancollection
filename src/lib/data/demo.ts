@@ -7,7 +7,7 @@ import {
   seedSettings,
   seedUuid,
 } from "../seed/catalog";
-import type { Coupon, DashboardStats, Order, OrderStatus, Product, Settings } from "../types";
+import type { Coupon, DashboardStats, Order, OrderStatus, Product, Settings, SizeChart } from "../types";
 import { StockError, type CreateOrderInput, type ProductInput, type Repo } from "./repo";
 import { filterProducts, newOrderNo } from "./shared";
 
@@ -22,6 +22,7 @@ type Store = {
   reservations: { orderId: string; variantId: string; qty: number; expiresAt: number }[];
   audit: { at: string; actor: string; action: string; entity: string; entityId: string }[];
   paymentTokens: Map<string, string>;
+  sizeCharts: SizeChart[];
 };
 
 const g = globalThis as unknown as { __aacStore?: Store };
@@ -103,6 +104,7 @@ function store(): Store {
       products,
       coupons: clone(seedCoupons),
       settings: clone(seedSettings),
+      sizeCharts: [],
       orders: sampleOrders(products),
       reservations: [],
       audit: [],
@@ -147,7 +149,12 @@ export const demoRepo: Repo = {
 
   async listProducts(q = {}) {
     const ids = q.categorySlug ? categoryIdsFor(q.categorySlug) : null;
-    return clone(filterProducts(store().products, q, ids));
+    const s = store();
+    const paidLike: OrderStatus[] = ["paid", "preparing", "shipped", "delivered"];
+    const sold = new Map<string, number>();
+    for (const o of s.orders) if (paidLike.includes(o.status)) for (const i of o.items) sold.set(i.productId, (sold.get(i.productId) ?? 0) + i.qty);
+    const withSales = s.products.map((p) => ({ ...p, soldCount: sold.get(p.id) ?? 0 }));
+    return clone(filterProducts(withSales, q, ids));
   },
 
   async getProductBySlug(slug, opts) {
@@ -354,6 +361,7 @@ export const demoRepo: Repo = {
       ...input,
       id,
       vatRate: 10,
+      soldCount: 0,
       media: [],
       variants,
       createdAt: new Date().toISOString(),
@@ -361,6 +369,33 @@ export const demoRepo: Repo = {
     s.products.unshift(p);
     audit(actorId, "create", "product", p.slug);
     return clone(p);
+  },
+
+  async listSizeCharts() {
+    const s = store();
+    return clone(s.sizeCharts).map((c) => ({ ...c, productCount: s.products.filter((p) => p.sizeChartId === c.id && p.status !== "archived").length }));
+  },
+
+  async getSizeChart(id) {
+    const c = store().sizeCharts.find((x) => x.id === id);
+    return c ? clone(c) : null;
+  },
+
+  async upsertSizeChart(c, actorId) {
+    const s = store();
+    const existing = c.id ? s.sizeCharts.find((x) => x.id === c.id) : undefined;
+    if (existing) Object.assign(existing, { name: c.name, content: c.content });
+    const saved = existing ?? { id: randomUUID(), name: c.name, content: c.content };
+    if (!existing) s.sizeCharts.push(saved);
+    audit(actorId, c.id ? "update" : "create", "size_chart", saved.name);
+    return clone(saved);
+  },
+
+  async deleteSizeChart(id, actorId) {
+    const s = store();
+    s.sizeCharts = s.sizeCharts.filter((x) => x.id !== id);
+    for (const p of s.products) if (p.sizeChartId === id) p.sizeChartId = null;
+    audit(actorId, "delete", "size_chart", id);
   },
 
   async archiveProduct(id, actorId) {

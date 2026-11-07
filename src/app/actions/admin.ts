@@ -3,7 +3,7 @@ import { features } from "@/lib/env";
 import { revalidatePath } from "next/cache";
 import { repo } from "@/lib/data";
 import { requireAdmin, AdminError } from "@/lib/admin-guard";
-import { couponFormSchema, productFormSchema } from "@/lib/validation";
+import { couponFormSchema, productFormSchema, sizeChartSchema } from "@/lib/validation";
 import { deleteProductImage } from "@/lib/media/storage";
 import { sendOrderUpdate } from "@/lib/email";
 
@@ -55,6 +55,19 @@ export async function saveProduct(raw: unknown): Promise<AdminResult> {
     if (new Set(skus).size !== skus.length) return { ok: false as const, error: "SKU'lar benzersiz olmalı" };
     const combos = d.variants.map((v) => `${v.color}|${v.size}`);
     if (new Set(combos).size !== combos.length) return { ok: false as const, error: "Aynı renk/beden kombinasyonu iki kez girilmiş" };
+    // Yayına alma kuralı: en az 1 görsel ve stoğu olan en az 1 beden
+    if (d.status === "active") {
+      const existing = d.id ? await repo.getProductById(d.id) : null;
+      const imageCount = existing?.media.length ?? 0;
+      const hasStock = d.variants.some((v) => v.stock > 0);
+      if (!imageCount || !hasStock) {
+        const missing = [!imageCount && "en az 1 görsel", !hasStock && "stoğu olan en az 1 beden"].filter(Boolean).join(" ve ");
+        return {
+          ok: false as const,
+          error: `Yayına almak için ${missing} gerekli.${!imageCount && !d.id ? " Ürünü önce taslak olarak kaydedin, ardından görsel ekleyip yayına alın." : ""}`,
+        };
+      }
+    }
     const saved = await repo.upsertProduct(
       {
         ...d,
@@ -86,6 +99,8 @@ export async function removeMedia(productId: string, key: string): Promise<Admin
   return guard(async (actor) => {
     const p = await repo.getProductById(z.string().uuid().parse(productId));
     if (!p || !p.media.some((m) => m.key === key)) return { ok: false as const, error: "Görsel bulunamadı" };
+    if (p.status === "active" && p.media.length === 1)
+      return { ok: false as const, error: "Yayındaki ürünün son görseli silinemez. Önce yeni görsel ekleyin ya da ürünü taslağa alın." };
     await repo.removeProductMedia(productId, key, actor);
     await deleteProductImage(key).catch((e) => console.error("[media delete]", e));
     revalidateCatalog(p.slug);
@@ -195,5 +210,25 @@ export async function saveSettings(raw: unknown): Promise<AdminResult> {
     await repo.updateSettings(parsed.data as Settings, actor);
     revalidatePath("/", "layout");
     return { ok: true as const, message: "Ayarlar kaydedildi" };
+  }) as Promise<AdminResult>;
+}
+
+export async function saveSizeChart(raw: unknown): Promise<AdminResult> {
+  return guard(async (actor) => {
+    const parsed = sizeChartSchema.safeParse(raw);
+    if (!parsed.success) return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Geçersiz form" };
+    const saved = await repo.upsertSizeChart({ id: parsed.data.id || undefined, name: parsed.data.name, content: parsed.data.content }, actor);
+    revalidatePath("/urun/[slug]", "page");
+    revalidatePath("/yonetim/beden-tablolari");
+    return { ok: true as const, message: "Beden tablosu kaydedildi", id: saved.id };
+  }) as Promise<AdminResult>;
+}
+
+export async function deleteSizeChart(id: string): Promise<AdminResult> {
+  return guard(async (actor) => {
+    await repo.deleteSizeChart(z.string().uuid().parse(id), actor);
+    revalidatePath("/urun/[slug]", "page");
+    revalidatePath("/yonetim/beden-tablolari");
+    return { ok: true as const, message: "Beden tablosu silindi" };
   }) as Promise<AdminResult>;
 }

@@ -39,8 +39,9 @@ export default async function ProductPage({ params }: Props) {
   const cat = categories.find((c) => c.id === product.categoryId);
   const parent = cat?.parentId ? categories.find((c) => c.id === cat.parentId) : null;
   const root = parent ?? cat;
-  const sizeChart =
-    root?.slug === "esarp-sal" ? "esarp" : root?.slug === "pijama-ev-giyim" ? "pijama" : root?.slug === "erkek" ? "erkek" : "tesettur";
+  // Beden tablosu yalnız yönetimden ürüne atanmışsa gösterilir
+  const chart = product.sizeChartId ? await repo.getSizeChart(product.sizeChartId) : null;
+  const sizeChart = chart && chart.content.trim() ? { name: chart.name, body: <Markdown>{chart.content}</Markdown> } : null;
   const related = (await repo.listProducts({ categorySlug: root?.slug, limit: 9 })).filter((p) => p.id !== product.id).slice(0, 4);
 
   // Yalnız ilk görsellere bulanık önizleme (HTML boyutunu küçük tutmak için)

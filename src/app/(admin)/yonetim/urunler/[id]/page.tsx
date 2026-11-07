@@ -6,7 +6,7 @@ import { MediaManager } from "@/components/admin/media-manager";
 
 export default async function AdminProductEdit({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const categories = await repo.listCategories();
+  const [categories, sizeCharts] = await Promise.all([repo.listCategories(), repo.listSizeCharts()]);
   const product = id === "yeni" ? null : /^[0-9a-f-]{36}$/.test(id) ? await repo.getProductById(id) : null;
   if (id !== "yeni" && !product) notFound();
   return (
@@ -21,7 +21,7 @@ export default async function AdminProductEdit({ params }: { params: Promise<{ i
       {product && (
         <MediaManager productId={product.id} productName={product.name} media={product.media} colors={[...new Set(product.variants.map((v) => v.color))]} />
       )}
-      <ProductEditor product={product} categories={categories} />
+      <ProductEditor product={product} categories={categories} sizeCharts={sizeCharts} />
     </div>
   );
 }

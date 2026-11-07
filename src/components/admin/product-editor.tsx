@@ -1,17 +1,17 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { archiveProduct, saveProduct } from "@/app/actions/admin";
 import { slugify } from "@/lib/format";
 import { MarkdownField } from "./markdown-field";
 import { VariantBuilder, useVariantBuilder, type VariantRow } from "./variant-builder";
-import type { Category, Product } from "@/lib/types";
+import type { Category, Product, SizeChart } from "@/lib/types";
 import { Flash, useAdminAction } from "./order-actions";
 
 const tl = (k: number | null | undefined) => (k == null ? "" : (k / 100).toFixed(2).replace(/\.00$/, ""));
 const kurus = (s: string) => Math.round(Number(String(s).replace(",", ".")) * 100);
 
-export function ProductEditor({ product, categories }: { product: Product | null; categories: Category[] }) {
+export function ProductEditor({ product, categories, sizeCharts }: { product: Product | null; categories: Category[]; sizeCharts: SizeChart[] }) {
   const router = useRouter();
   const { pending, msg, run } = useAdminAction();
   const [name, setName] = useState(product?.name ?? "");
@@ -25,11 +25,18 @@ export function ProductEditor({ product, categories }: { product: Product | null
   const vb = useVariantBuilder(initialRows, skuBase);
   const [variantError, setVariantError] = useState<string | null>(null);
 
+  // Kaydedilmemiş değişiklik takibi: form alanları + varyant seçimi
+  const [formDirty, setFormDirty] = useState(false);
+  const variantSig = JSON.stringify(vb.rows.map((r) => [r.color, r.colorHex, r.size, r.stock, r.priceOverride, r.sku]));
+  const [savedSig, setSavedSig] = useState(variantSig);
+  const dirty = formDirty || variantSig !== savedSig;
+  useUnsavedGuard(dirty);
+
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Renk ve beden seçimi zorunlu
-    if (vb.colors.length === 0 || vb.sizes.length === 0) {
-      setVariantError(vb.colors.length === 0 ? "En az bir renk seçin." : "En az bir beden seçin.");
+    if (vb.colors.length === 0 || vb.colorWithoutSize) {
+      setVariantError(vb.colors.length === 0 ? "En az bir renk seçin." : `${vb.colorWithoutSize} için en az bir beden seçin (ya da rengi kaldırın).`);
       document.getElementById("varyantlar")?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
@@ -49,6 +56,7 @@ export function ProductEditor({ product, categories }: { product: Product | null
       status: String(f.get("status")),
       isNew: f.get("isNew") === "on",
       isBestseller: f.get("isBestseller") === "on",
+      sizeChartId: String(f.get("sizeChartId") ?? "") || null,
       variants: vb.rows.map((r) => ({
         id: r.id,
         sku: r.sku,
@@ -61,13 +69,22 @@ export function ProductEditor({ product, categories }: { product: Product | null
     };
     run(async () => {
       const res = await saveProduct(payload);
+      if (res.ok) {
+        setFormDirty(false);
+        setSavedSig(variantSig);
+      }
       if (res.ok && !product && res.id) router.replace(`/yonetim/urunler/${res.id}`);
       return res;
     });
   };
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+    <form
+      onSubmit={onSubmit}
+      onInput={() => setFormDirty(true)}
+      onChange={() => setFormDirty(true)}
+      className="grid gap-6 pb-4 xl:grid-cols-[1.4fr_1fr]"
+    >
       <div className="card space-y-4 p-5">
         <div>
           <label className="label" htmlFor="name">Ürün adı</label>
@@ -95,7 +112,7 @@ export function ProductEditor({ product, categories }: { product: Product | null
           label="Kumaş ve ölçüler"
           rows={6}
           defaultValue={product?.fabric}
-          sizes={vb.orderedSizes}
+          sizes={vb.allSizes}
           placeholder={"**Kumaş:** %100 Viskon\n\nÖlçü tablosu için tablo butonuna basın."}
         />
         <MarkdownField name="care" label="Bakım" rows={3} defaultValue={product?.care ?? "30°C'de tersten yıkayın."} />
@@ -134,10 +151,18 @@ export function ProductEditor({ product, categories }: { product: Product | null
             <option value="archived">Arşiv</option>
           </select>
         </div>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="isNew" defaultChecked={product?.isNew} className="h-4 w-4 accent-ink" /> &quot;Yeni&quot; rozeti</label>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="isBestseller" defaultChecked={product?.isBestseller} className="h-4 w-4 accent-ink" /> Çok satanlarda göster</label>
-        <button className="btn-primary w-full" disabled={pending}>{pending ? "Kaydediliyor…" : "Kaydet"}</button>
-        <Flash msg={msg} />
+        <div>
+          <label className="label" htmlFor="sizeChartId">Beden tablosu</label>
+          <select id="sizeChartId" name="sizeChartId" className="input" defaultValue={product?.sizeChartId ?? ""}>
+            <option value="">Yok (buton gösterilmez)</option>
+            {sizeCharts.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          <a href="/yonetim/beden-tablolari" target="_blank" className="mt-1 inline-block text-xs text-muted underline">Beden tablolarını yönet ↗</a>
+        </div>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="isNew" defaultChecked={product?.isNew} className="h-4 w-4 accent-ink" /> &quot;Yeni&quot; rozeti <span className="text-xs text-muted">(son 30 günde eklenenler zaten yeni sayılır)</span></label>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="isBestseller" defaultChecked={product?.isBestseller} className="h-4 w-4 accent-ink" /> Çok satanlarda göster <span className="text-xs text-muted">(satışı olanlar otomatik listelenir)</span></label>
         {product && product.status !== "archived" && (
           <button
             type="button"
@@ -155,6 +180,56 @@ export function ProductEditor({ product, categories }: { product: Product | null
         <VariantBuilder vb={vb} />
         {variantError && <p className="field-error" role="alert">{variantError}</p>}
       </div>
+
+      {/* Sabit kaydet çubuğu: sayfanın neresinde olunursa olsun görünür */}
+      <div className="sticky bottom-0 z-20 -mx-4 border-t border-line bg-white/95 px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 xl:col-span-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="min-w-0 flex-1 text-sm">
+            {pending ? (
+              <span className="text-muted">Kaydediliyor…</span>
+            ) : dirty ? (
+              <span className="flex items-center gap-2 font-medium text-rose">
+                <span className="h-2 w-2 rounded-full bg-rose" /> Kaydedilmemiş değişiklikler var
+              </span>
+            ) : msg ? (
+              <Flash msg={msg} />
+            ) : (
+              <span className="text-muted">Tüm değişiklikler kaydedildi</span>
+            )}
+          </div>
+          <button className="btn-primary min-w-40" disabled={pending}>{pending ? "Kaydediliyor…" : "Kaydet"}</button>
+        </div>
+        {dirty && msg && !msg.ok && <div className="mt-1"><Flash msg={msg} /></div>}
+      </div>
     </form>
   );
+}
+
+/** Kaydedilmemiş değişiklik varken sayfadan çıkışta uyarır (yenileme, sekme kapatma ve panel içi bağlantılar) */
+function useUnsavedGuard(dirty: boolean) {
+  useEffect(() => {
+    if (!dirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    const onClick = (e: MouseEvent) => {
+      const a = (e.target as HTMLElement | null)?.closest?.("a");
+      if (!a || a.target === "_blank" || e.metaKey || e.ctrlKey) return;
+      const href = a.getAttribute("href");
+      if (!href || href.startsWith("#")) return;
+      const url = new URL(href, location.href);
+      if (url.origin !== location.origin || url.pathname === location.pathname) return;
+      if (!confirm("Kaydedilmemiş değişiklikler var. Kaydetmeden çıkmak istiyor musunuz?")) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    document.addEventListener("click", onClick, true);
+    return () => {
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      document.removeEventListener("click", onClick, true);
+    };
+  }, [dirty]);
 }

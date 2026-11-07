@@ -23,7 +23,7 @@ export function db(): SupabaseClient {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const PRODUCT_SELECT =
-  "id, slug, name, description, fabric, care, category_id, base_price, compare_at_price, status, is_new, is_bestseller, vat_rate, created_at, product_media(storage_key, width, height, thumbhash, alt, color, sort), product_variants(id, product_id, sku, size, color, color_hex, stock, price_override)";
+  "id, slug, name, description, fabric, care, category_id, base_price, compare_at_price, status, is_new, is_bestseller, vat_rate, size_chart_id, created_at, product_media(storage_key, width, height, thumbhash, alt, color, sort), product_variants(id, product_id, sku, size, color, color_hex, stock, price_override)";
 
 function mapVariant(v: any): Variant {
   return {
@@ -56,6 +56,8 @@ function mapProduct(r: any): Product {
     isNew: r.is_new,
     isBestseller: r.is_bestseller,
     vatRate: r.vat_rate,
+    sizeChartId: r.size_chart_id ?? null,
+    soldCount: 0,
     media,
     variants: (r.product_variants ?? []).map(mapVariant).sort((a: Variant, b: Variant) => a.sku.localeCompare(b.sku)),
     createdAt: r.created_at,
@@ -150,8 +152,15 @@ export const supabaseRepo: Repo = {
       query = query.in("category_id", catIds.length ? catIds : ["00000000-0000-0000-0000-000000000000"]);
     }
     const rows = check(await query.limit(500));
+    const products = (rows as any[]).map(mapProduct);
+    // Satış adetleri (Çok Satanlar / popüler sıralama). Görünüm yoksa sessizce 0 kalır.
+    const sales = await db().from("product_sales").select("product_id, sold");
+    if (!sales.error) {
+      const sold = new Map((sales.data as any[]).map((r) => [r.product_id as string, r.sold as number]));
+      for (const p of products) p.soldCount = sold.get(p.id) ?? 0;
+    }
     // Arama/filtre/sıralama küçük katalogda bellekte; büyüyünce Postgres full-text'e taşınabilir.
-    return filterProducts((rows as any[]).map(mapProduct), { ...q, categorySlug: undefined }, null);
+    return filterProducts(products, { ...q, categorySlug: undefined }, null);
   },
 
   async getProductBySlug(slug, opts) {
@@ -394,6 +403,7 @@ export const supabaseRepo: Repo = {
       status: input.status,
       is_new: input.isNew,
       is_bestseller: input.isBestseller,
+      size_chart_id: input.sizeChartId,
     };
     const saved = check(await db().from("products").upsert(row).select("id").single()) as any;
     const productId = saved.id as string;
@@ -431,6 +441,35 @@ export const supabaseRepo: Repo = {
     }
     await audit(actorId, input.id ? "update" : "create", "product", slug);
     return (await this.getProductById(productId))!;
+  },
+
+  async listSizeCharts() {
+    const charts = check(await db().from("size_charts").select("id, name, content").order("name")) as any[];
+    const used = check(await db().from("products").select("size_chart_id").not("size_chart_id", "is", null).neq("status", "archived")) as any[];
+    return charts.map((c) => ({ ...c, productCount: used.filter((u) => u.size_chart_id === c.id).length }));
+  },
+
+  async getSizeChart(id) {
+    const row = check(await db().from("size_charts").select("id, name, content").eq("id", id).maybeSingle()) as any;
+    return row ?? null;
+  },
+
+  async upsertSizeChart(c, actorId) {
+    const row = check(
+      await db()
+        .from("size_charts")
+        .upsert({ ...(c.id ? { id: c.id } : {}), name: c.name, content: c.content, updated_at: new Date().toISOString() })
+        .select("id, name, content")
+        .single(),
+    ) as any;
+    await audit(actorId, c.id ? "update" : "create", "size_chart", row.name);
+    return row;
+  },
+
+  async deleteSizeChart(id, actorId) {
+    // Bağlı ürünlerde size_chart_id otomatik boşalır (on delete set null)
+    check(await db().from("size_charts").delete().eq("id", id));
+    await audit(actorId, "delete", "size_chart", id);
   },
 
   async archiveProduct(id, actorId) {

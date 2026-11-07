@@ -7,6 +7,7 @@ import { ProductImage } from "@/components/product/product-image";
 import { TrustBand } from "@/components/layout/footer";
 import { Butterfly } from "@/components/brand/logo";
 import type { Product } from "@/lib/types";
+import { isNewProduct } from "@/lib/format";
 
 export const revalidate = 300;
 
@@ -16,8 +17,12 @@ export default async function HomePage() {
     repo.listCategories(),
     repo.getSettings(),
   ]);
-  const newArrivals = all.filter((p) => p.isNew).slice(0, 8);
-  const bestsellers = all.filter((p) => p.isBestseller).slice(0, 10);
+  const newArrivals = all.filter((p) => isNewProduct(p)).slice(0, 8);
+  // Gerçek satışa göre, sonra elle işaretlenenler
+  const bestsellers = all
+    .filter((p) => p.soldCount > 0 || p.isBestseller)
+    .sort((a, b) => b.soldCount - a.soldCount || Number(b.isBestseller) - Number(a.isBestseller))
+    .slice(0, 10);
   const byCat = (slug: string): Product | undefined => {
     const cat = categories.find((c) => c.slug === slug);
     if (!cat) return undefined;

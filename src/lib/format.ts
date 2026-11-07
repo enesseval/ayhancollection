@@ -80,3 +80,16 @@ export function firstHexByColor(variants: { color: string; colorHex: string }[])
   for (const v of variants) if (!m.has(v.color)) m.set(v.color, v.colorHex);
   return [...m.entries()];
 }
+
+/** Ürünün en düşük satış fiyatı (bedene özel fiyatlar dahil) */
+export function minPrice(p: { basePrice: number; variants: { priceOverride: number | null }[] }): number {
+  const prices = p.variants.map((v) => v.priceOverride ?? p.basePrice);
+  return prices.length ? Math.min(...prices) : p.basePrice;
+}
+
+/** "Yeni" sayılma süresi: elle işaretlenmiş ya da son 30 günde eklenmiş */
+export const NEW_DAYS = 30;
+export function isNewProduct(p: { isNew: boolean; createdAt: string }, now = Date.now()): boolean {
+  return p.isNew || now - new Date(p.createdAt).getTime() < NEW_DAYS * 86400000;
+}
+

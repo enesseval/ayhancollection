@@ -13,6 +13,7 @@ import type {
   Settings,
   Address,
   Variant,
+  SizeChart,
 } from "../types";
 
 export type CreateOrderInput = {
@@ -46,6 +47,7 @@ export type ProductInput = {
   status: Product["status"];
   isNew: boolean;
   isBestseller: boolean;
+  sizeChartId: string | null;
   variants: Omit<Variant, "productId">[];
 };
 
@@ -91,6 +93,10 @@ export interface Repo {
   listCoupons(): Promise<Coupon[]>;
   upsertCoupon(c: Omit<Coupon, "id" | "usedCount"> & { id?: string }, actorId: string): Promise<Coupon>;
   updateSettings(s: Settings, actorId: string): Promise<void>;
+  listSizeCharts(): Promise<SizeChart[]>;
+  getSizeChart(id: string): Promise<SizeChart | null>;
+  upsertSizeChart(c: { id?: string; name: string; content: string }, actorId: string): Promise<SizeChart>;
+  deleteSizeChart(id: string, actorId: string): Promise<void>;
   dashboardStats(): Promise<DashboardStats>;
   listAudit(limit?: number): Promise<{ at: string; actor: string; action: string; entity: string; entityId: string }[]>;
 }
