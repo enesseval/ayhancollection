@@ -35,8 +35,16 @@ export function ProductEditor({ product, categories, sizeCharts }: { product: Pr
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Renk ve beden seçimi zorunlu
-    if (vb.colors.length === 0 || vb.colorWithoutSize) {
-      setVariantError(vb.colors.length === 0 ? "En az bir renk seçin." : `${vb.colorWithoutSize} için en az bir beden seçin (ya da rengi kaldırın).`);
+    if (vb.colors.length === 0 || vb.sizes.length === 0 || vb.rows.length === 0 || vb.colorWithoutSize) {
+      setVariantError(
+        vb.colors.length === 0
+          ? "En az bir renk seçin."
+          : vb.sizes.length === 0
+            ? "En az bir beden seçin."
+            : vb.rows.length === 0
+              ? "“Matris oluştur”a basıp stokları girin."
+              : `${vb.colorWithoutSize} renginde hiç beden yok: matriste en az bir hücreye stok yazın ya da rengi kaldırın.`,
+      );
       document.getElementById("varyantlar")?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
