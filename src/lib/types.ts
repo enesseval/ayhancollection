@@ -7,6 +7,10 @@ export type Category = {
   parentId: string | null;
   sort: number;
   description?: string;
+  /** false: mağazada gizli (yalnız yönetimde görünür) */
+  isActive?: boolean;
+  /** Yönetim listesinde: bu kategorideki (arşiv dışı) ürün sayısı */
+  productCount?: number;
 };
 
 export type Media = {

@@ -134,3 +134,16 @@ export const sizeChartSchema = z.object({
   name: z.string().trim().min(2, "Tablo adı en az 2 karakter olmalı").max(60),
   content: z.string().max(8000),
 });
+
+export const categoryFormSchema = z.object({
+  id: z.string().uuid().optional().or(z.literal("")),
+  name: z.string().trim().min(2, "Kategori adı en az 2 karakter olmalı").max(60),
+  slug: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]{2,80}$/, "Adres yalnız küçük harf, rakam ve tire içerebilir")
+    .refine((s) => !["yeni", "cok-satanlar", "indirim"].includes(s), "Bu adres mağazada özel bir sayfaya ait; başka bir adres seçin"),
+  parentId: z.string().uuid().nullable().or(z.literal("").transform(() => null)),
+  description: z.string().trim().max(300),
+  isActive: z.boolean(),
+});

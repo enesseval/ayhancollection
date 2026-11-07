@@ -125,16 +125,21 @@ async function audit(actor: string, action: string, entity: string, entityId: st
   await db().from("audit_logs").insert({ actor_id: actor, action, entity, entity_id: entityId, diff: diff ?? null });
 }
 
-async function allCategories(): Promise<Category[]> {
-  const rows = check(await db().from("categories").select("*").eq("is_active", true).order("sort"));
-  return (rows as any[]).map((c) => ({
+function mapCategory(c: any): Category {
+  return {
     id: c.id,
     slug: c.slug,
     name: c.name,
     parentId: c.parent_id,
     sort: c.sort,
     description: c.description ?? undefined,
-  }));
+    isActive: c.is_active,
+  };
+}
+
+async function allCategories(): Promise<Category[]> {
+  const rows = check(await db().from("categories").select("*").eq("is_active", true).order("sort"));
+  return (rows as any[]).map(mapCategory);
 }
 
 export const supabaseRepo: Repo = {
@@ -443,6 +448,56 @@ export const supabaseRepo: Repo = {
     }
     await audit(actorId, input.id ? "update" : "create", "product", slug);
     return (await this.getProductById(productId))!;
+  },
+
+  async listAllCategories() {
+    const rows = check(await db().from("categories").select("*").order("sort")) as any[];
+    const prods = check(await db().from("products").select("category_id").neq("status", "archived")) as any[];
+    return rows.map((c) => ({ ...mapCategory(c), productCount: prods.filter((p) => p.category_id === c.id).length }));
+  },
+
+  async upsertCategory(c, actorId) {
+    // Yeni kategori aynı seviyenin sonuna eklenir
+    let sort: number | undefined;
+    if (!c.id) {
+      const sib = check(
+        await (c.parentId
+          ? db().from("categories").select("sort").eq("parent_id", c.parentId)
+          : db().from("categories").select("sort").is("parent_id", null)),
+      ) as any[];
+      sort = sib.reduce((m, r) => Math.max(m, r.sort ?? 0), 0) + 10;
+    }
+    const row = check(
+      await db()
+        .from("categories")
+        .upsert({
+          ...(c.id ? { id: c.id } : {}),
+          name: c.name,
+          slug: c.slug,
+          parent_id: c.parentId,
+          description: c.description || null,
+          is_active: c.isActive,
+          ...(sort !== undefined ? { sort } : {}),
+        })
+        .select("*")
+        .single(),
+    );
+    await audit(actorId, c.id ? "update" : "create", "category", c.slug);
+    return mapCategory(row);
+  },
+
+  async deleteCategory(id, actorId) {
+    const used = check(await db().from("products").select("id").eq("category_id", id).limit(1)) as any[];
+    if (used.length) throw new Error("Bu kategoride ürün var (arşivdekiler dahil). Önce ürünleri başka kategoriye taşıyın ya da kategoriyi gizleyin.");
+    const kids = check(await db().from("categories").select("id").eq("parent_id", id).limit(1)) as any[];
+    if (kids.length) throw new Error("Bu kategorinin alt kategorileri var. Önce onları silin ya da başka kategoriye taşıyın.");
+    check(await db().from("categories").delete().eq("id", id));
+    await audit(actorId, "delete", "category", id);
+  },
+
+  async reorderCategories(ids, actorId) {
+    for (let i = 0; i < ids.length; i++) check(await db().from("categories").update({ sort: (i + 1) * 10 }).eq("id", ids[i]));
+    await audit(actorId, "reorder", "category", ids.length + " kategori");
   },
 
   async listSizeCharts() {

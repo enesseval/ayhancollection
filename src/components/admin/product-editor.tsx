@@ -141,9 +141,9 @@ export function ProductEditor({ product, categories, sizeCharts }: { product: Pr
             <option value="" disabled>Seçin</option>
             {categories.filter((c) => !c.parentId).map((p) => (
               <optgroup key={p.id} label={p.name}>
-                <option value={p.id}>{p.name} (genel)</option>
+                <option value={p.id}>{p.name} (genel){p.isActive === false ? " — gizli" : ""}</option>
                 {categories.filter((c) => c.parentId === p.id).map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>{c.name}{c.isActive === false ? " — gizli" : ""}</option>
                 ))}
               </optgroup>
             ))}

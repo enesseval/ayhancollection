@@ -52,6 +52,18 @@ export type ProductInput = {
   variants: Omit<Variant, "productId">[];
 };
 
+export type CategoryInput = {
+  id?: string;
+  name: string;
+  slug: string;
+  parentId: string | null;
+  description: string;
+  isActive: boolean;
+};
+
+/** Mağazada özel sayfaları olan adresler; kategoriye verilemez */
+export const RESERVED_CATEGORY_SLUGS = ["yeni", "cok-satanlar", "indirim"];
+
 export class StockError extends Error {
   constructor(public variantId: string, public available: number) {
     super("Yetersiz stok");
@@ -94,6 +106,10 @@ export interface Repo {
   listCoupons(): Promise<Coupon[]>;
   upsertCoupon(c: Omit<Coupon, "id" | "usedCount"> & { id?: string }, actorId: string): Promise<Coupon>;
   updateSettings(s: Settings, actorId: string): Promise<void>;
+  listAllCategories(): Promise<Category[]>;
+  upsertCategory(c: CategoryInput, actorId: string): Promise<Category>;
+  deleteCategory(id: string, actorId: string): Promise<void>;
+  reorderCategories(ids: string[], actorId: string): Promise<void>;
   listSizeCharts(): Promise<SizeChart[]>;
   getSizeChart(id: string): Promise<SizeChart | null>;
   upsertSizeChart(c: { id?: string; name: string; content: string }, actorId: string): Promise<SizeChart>;

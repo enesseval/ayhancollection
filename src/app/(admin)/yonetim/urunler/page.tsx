@@ -10,7 +10,7 @@ export default async function AdminProducts({ searchParams }: { searchParams: Pr
   const { q = "" } = await searchParams;
   const [products, categories] = await Promise.all([
     repo.listProducts({ includeInactive: true, q: q.slice(0, 60) || undefined }),
-    repo.listCategories(),
+    repo.listAllCategories(),
   ]);
   return (
     <div className="space-y-6">

@@ -7,7 +7,7 @@ import {
   seedSettings,
   seedUuid,
 } from "../seed/catalog";
-import type { Coupon, DashboardStats, Order, OrderStatus, Product, Settings, SizeChart } from "../types";
+import type { Category, Coupon, DashboardStats, Order, OrderStatus, Product, Settings, SizeChart } from "../types";
 import { StockError, type CreateOrderInput, type ProductInput, type Repo } from "./repo";
 import { filterProducts, newOrderNo } from "./shared";
 
@@ -23,6 +23,7 @@ type Store = {
   audit: { at: string; actor: string; action: string; entity: string; entityId: string }[];
   paymentTokens: Map<string, string>;
   sizeCharts: SizeChart[];
+  categories: Category[];
 };
 
 const g = globalThis as unknown as { __aacStore?: Store };
@@ -105,6 +106,7 @@ function store(): Store {
       coupons: clone(seedCoupons),
       settings: clone(seedSettings),
       sizeCharts: [],
+      categories: clone(seedCategories).map((c) => ({ ...c, isActive: true })),
       orders: sampleOrders(products),
       reservations: [],
       audit: [],
@@ -121,9 +123,10 @@ function audit(actor: string, action: string, entity: string, entityId: string) 
 }
 
 function categoryIdsFor(slug: string): string[] | null {
-  const cat = seedCategories.find((c) => c.slug === slug);
+  const cats = store().categories.filter((c) => c.isActive !== false);
+  const cat = cats.find((c) => c.slug === slug);
   if (!cat) return [];
-  return [cat.id, ...seedCategories.filter((c) => c.parentId === cat.id).map((c) => c.id)];
+  return [cat.id, ...cats.filter((c) => c.parentId === cat.id).map((c) => c.id)];
 }
 
 function restock(order: Order) {
@@ -144,7 +147,47 @@ export const demoRepo: Repo = {
   kind: "demo",
 
   async listCategories() {
-    return clone(seedCategories);
+    return clone(store().categories.filter((c) => c.isActive !== false)).sort((a, b) => a.sort - b.sort);
+  },
+
+  async listAllCategories() {
+    const s = store();
+    return clone(s.categories)
+      .sort((a, b) => a.sort - b.sort)
+      .map((c) => ({ ...c, productCount: s.products.filter((p) => p.categoryId === c.id && p.status !== "archived").length }));
+  },
+
+  async upsertCategory(c, actorId) {
+    const s = store();
+    if (s.categories.some((x) => x.slug === c.slug && x.id !== c.id)) throw new Error("Bu adres başka bir kategoride kullanılıyor.");
+    const existing = c.id ? s.categories.find((x) => x.id === c.id) : undefined;
+    if (existing) {
+      Object.assign(existing, { name: c.name, slug: c.slug, parentId: c.parentId, description: c.description || undefined, isActive: c.isActive });
+      audit(actorId, "update", "category", c.slug);
+      return clone(existing);
+    }
+    const sort = s.categories.filter((x) => x.parentId === c.parentId).reduce((m, x) => Math.max(m, x.sort), 0) + 10;
+    const cat: Category = { id: randomUUID(), name: c.name, slug: c.slug, parentId: c.parentId, description: c.description || undefined, isActive: c.isActive, sort };
+    s.categories.push(cat);
+    audit(actorId, "create", "category", c.slug);
+    return clone(cat);
+  },
+
+  async deleteCategory(id, actorId) {
+    const s = store();
+    if (s.products.some((p) => p.categoryId === id)) throw new Error("Bu kategoride ürün var (arşivdekiler dahil). Önce ürünleri başka kategoriye taşıyın ya da kategoriyi gizleyin.");
+    if (s.categories.some((c) => c.parentId === id)) throw new Error("Bu kategorinin alt kategorileri var. Önce onları silin ya da başka kategoriye taşıyın.");
+    s.categories = s.categories.filter((c) => c.id !== id);
+    audit(actorId, "delete", "category", id);
+  },
+
+  async reorderCategories(ids, actorId) {
+    const s = store();
+    ids.forEach((id, i) => {
+      const c = s.categories.find((x) => x.id === id);
+      if (c) c.sort = (i + 1) * 10;
+    });
+    audit(actorId, "reorder", "category", ids.length + " kategori");
   },
 
   async listProducts(q = {}) {

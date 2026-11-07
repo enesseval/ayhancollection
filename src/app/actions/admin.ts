@@ -3,7 +3,7 @@ import { features } from "@/lib/env";
 import { revalidatePath } from "next/cache";
 import { repo } from "@/lib/data";
 import { requireAdmin, AdminError } from "@/lib/admin-guard";
-import { couponFormSchema, productFormSchema, sizeChartSchema } from "@/lib/validation";
+import { categoryFormSchema, couponFormSchema, productFormSchema, sizeChartSchema } from "@/lib/validation";
 import { deleteProductImage } from "@/lib/media/storage";
 import { sendOrderUpdate } from "@/lib/email";
 
@@ -230,5 +230,60 @@ export async function deleteSizeChart(id: string): Promise<AdminResult> {
     revalidatePath("/urun/[slug]", "page");
     revalidatePath("/yonetim/beden-tablolari");
     return { ok: true as const, message: "Beden tablosu silindi" };
+  }) as Promise<AdminResult>;
+}
+
+/* ---------------- Kategoriler ---------------- */
+
+function revalidateStore() {
+  // Kategoriler üst menüde her sayfada görünür
+  revalidatePath("/", "layout");
+}
+
+export async function saveCategory(raw: unknown): Promise<AdminResult> {
+  return guard(async (actor) => {
+    const parsed = categoryFormSchema.safeParse(raw);
+    if (!parsed.success) return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Geçersiz form" };
+    const d = parsed.data;
+    const all = await repo.listAllCategories();
+    if (d.parentId) {
+      const parent = all.find((c) => c.id === d.parentId);
+      if (!parent) return { ok: false as const, error: "Üst kategori bulunamadı" };
+      if (parent.parentId) return { ok: false as const, error: "Alt kategorinin altına kategori eklenemez (en fazla 2 seviye)." };
+      if (d.id && parent.id === d.id) return { ok: false as const, error: "Kategori kendi altına taşınamaz." };
+      if (d.id && all.some((c) => c.parentId === d.id))
+        return { ok: false as const, error: "Bu kategorinin alt kategorileri var; başka bir kategorinin altına taşınamaz." };
+    }
+    if (all.some((c) => c.slug === d.slug && c.id !== d.id)) return { ok: false as const, error: "Bu adres başka bir kategoride kullanılıyor." };
+    const saved = await repo.upsertCategory(
+      { id: d.id || undefined, name: capitalizeFirst(d.name), slug: d.slug, parentId: d.parentId, description: d.description, isActive: d.isActive },
+      actor,
+    );
+    revalidateStore();
+    return { ok: true as const, message: "Kategori kaydedildi", id: saved.id };
+  }) as Promise<AdminResult>;
+}
+
+export async function deleteCategory(id: string): Promise<AdminResult> {
+  return guard(async (actor) => {
+    await repo.deleteCategory(z.string().uuid().parse(id), actor);
+    revalidateStore();
+    return { ok: true as const, message: "Kategori silindi" };
+  }) as Promise<AdminResult>;
+}
+
+export async function moveCategory(id: string, dir: -1 | 1): Promise<AdminResult> {
+  return guard(async (actor) => {
+    const all = await repo.listAllCategories();
+    const me = all.find((c) => c.id === z.string().uuid().parse(id));
+    if (!me) return { ok: false as const, error: "Kategori bulunamadı" };
+    const siblings = all.filter((c) => c.parentId === me.parentId).sort((a, b) => a.sort - b.sort);
+    const i = siblings.findIndex((c) => c.id === me.id);
+    const j = i + dir;
+    if (j < 0 || j >= siblings.length) return { ok: true as const };
+    [siblings[i], siblings[j]] = [siblings[j], siblings[i]];
+    await repo.reorderCategories(siblings.map((c) => c.id), actor);
+    revalidateStore();
+    return { ok: true as const, message: "Sıra güncellendi" };
   }) as Promise<AdminResult>;
 }
