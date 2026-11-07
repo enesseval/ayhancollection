@@ -231,7 +231,7 @@ export function VariantTable({ vt }: { vt: ReturnType<typeof useVariantRows> }) 
               <th className="py-2 pr-2 font-medium">SKU</th>
               <th className="py-2 pr-2 font-medium">Stok</th>
               <th className="py-2 pr-2 font-medium">Özel fiyat (TL)</th>
-              <th />
+              <th><span className="sr-only">İşlemler</span></th>
             </tr>
           </thead>
           <tbody>

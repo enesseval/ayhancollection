@@ -34,7 +34,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/yonetim" className="whitespace-nowrap font-serif text-base tracking-[0.12em]">AYŞE AYHAN</Link>
           <span className="rounded bg-sand px-2 py-0.5 text-[10px] font-semibold tracking-wider">YÖNETİM</span>
         </div>
-        <nav className="no-scrollbar flex gap-1 overflow-x-auto px-2 pb-2 lg:flex-col lg:pb-0">
+        <nav aria-label="Yönetim menüsü" className="no-scrollbar flex gap-1 overflow-x-auto px-2 pb-2 lg:flex-col lg:pb-0">
           {NAV.map((n) => (
             <Link key={n.href} href={n.href} className="flex shrink-0 items-center gap-2.5 rounded px-3 py-2.5 text-sm hover:bg-canvas">
               <n.icon className="h-4 w-4" strokeWidth={1.6} /> {n.label}
@@ -59,7 +59,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </aside>
       <div className="min-w-0">
         {(isDemoData || !features.iyzico) && (
-          <div className="border-b border-blush bg-blush-soft px-4 py-2 text-xs">
+          <div role="region" aria-label="Demo bilgisi" className="border-b border-blush bg-blush-soft px-4 py-2 text-xs">
             <b>Demo mod:</b>{" "}
             {[
               isDemoData && "veriler bellekte (Supabase bağlanınca kalıcı olur)",
@@ -70,7 +70,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               .join(" · ")}
           </div>
         )}
-        <div className="p-4 sm:p-6 lg:p-8">{children}</div>
+        <main id="icerik" className="p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

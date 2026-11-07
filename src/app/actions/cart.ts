@@ -28,7 +28,8 @@ export type PricedCartView = {
 };
 
 const inputSchema = z.object({
-  lines: z.array(cartLineSchema).max(30),
+  // Satırlar tek tek doğrulanır: bozuk bir satır bütün sepeti düşürmez
+  lines: z.array(z.unknown()).max(30),
   coupon: z.string().trim().toUpperCase().max(24).optional(),
 });
 
@@ -38,7 +39,14 @@ export async function priceCartAction(raw: unknown): Promise<PricedCartView> {
   if (!parsed.success) {
     return { lines: [], removed: [], subtotal: 0, discount: 0, shipping: 0, total: 0, couponCode: null, couponError: "Geçersiz sepet", freeShippingRemaining: 0 };
   }
-  const { lines, coupon } = parsed.data;
+  const { coupon } = parsed.data;
+  const lines = parsed.data.lines.flatMap((l) => {
+    const r = cartLineSchema.safeParse(l);
+    return r.success ? [r.data] : [];
+  });
+  const invalid = parsed.data.lines
+    .map((l) => (l && typeof l === "object" && typeof (l as { variantId?: unknown }).variantId === "string" ? (l as { variantId: string }).variantId : null))
+    .filter((id): id is string => !!id && !lines.some((x) => x.variantId === id));
   let couponCode = coupon || null;
   let limited = false;
   if (couponCode) {
@@ -63,7 +71,7 @@ export async function priceCartAction(raw: unknown): Promise<PricedCartView> {
       color: l.variant.color,
       imageKey: (l.product.media.find((m) => m.color === l.variant.color) ?? l.product.media[0])?.key ?? null,
     })),
-    removed: lines.filter((l) => !kept.has(l.variantId)).map((l) => l.variantId),
+    removed: [...lines.filter((l) => !kept.has(l.variantId)).map((l) => l.variantId), ...invalid],
     subtotal: t.subtotal,
     discount: t.discount,
     shipping: t.shipping,

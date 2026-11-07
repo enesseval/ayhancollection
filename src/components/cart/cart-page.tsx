@@ -96,6 +96,9 @@ export function CartPageClient({ threshold }: { threshold: number }) {
   if (items.length === 0)
     return (
       <div className="py-16 text-center">
+        {notice && (
+          <p role="status" className="mx-auto mb-6 max-w-md rounded border border-line bg-sand px-4 py-3 text-sm">{notice}</p>
+        )}
         <p className="text-ink-soft">Sepetiniz boş.</p>
         <Link href="/" className="btn-primary mt-6">Alışverişe başla</Link>
       </div>
@@ -145,7 +148,13 @@ export function CartPageClient({ threshold }: { threshold: number }) {
       <aside className="h-fit space-y-5 rounded-md border border-line bg-white p-5 lg:sticky lg:top-24">
         <FreeShippingBar subtotal={(priced?.subtotal ?? 0) - (priced?.discount ?? 0)} threshold={threshold} />
         <Summary priced={priced} pending={pending} />
-        <Link href="/odeme" className="btn-primary w-full text-base">Güvenli ödemeye geç</Link>
+        {priced && priced.lines.length > 0 && !pending ? (
+          <Link href="/odeme" className="btn-primary w-full text-base">Güvenli ödemeye geç</Link>
+        ) : (
+          <button type="button" className="btn-primary w-full text-base" disabled aria-disabled="true">
+            {pending || !priced ? "Sepet güncelleniyor…" : "Güvenli ödemeye geç"}
+          </button>
+        )}
         <p className="text-center text-xs text-muted">3D Secure ile güvenli ödeme · 14 gün iade</p>
       </aside>
     </div>

@@ -24,7 +24,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         {term.length >= 2 ? (
           <>
             <p className="mb-6 text-sm text-muted">&quot;{term}&quot; için {results.length} sonuç</p>
-            {results.length ? <ProductGrid products={results} /> : <p className="py-10 text-center text-ink-soft">Sonuç bulunamadı. Farklı bir kelime deneyin.</p>}
+            {results.length ? <ProductGrid products={results} preloadFirst={2} heading="h2" /> : <p className="py-10 text-center text-ink-soft">Sonuç bulunamadı. Farklı bir kelime deneyin.</p>}
           </>
         ) : (
           <>

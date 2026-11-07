@@ -12,7 +12,8 @@ import { sendOrderUpdate } from "@/lib/email";
 const MAIL_NOTE = () => (features.resend ? ", müşteriye e-posta gönderildi" : " (e-posta servisi bağlanınca müşteriye otomatik gidecek)");
 import type { OrderStatus, Settings } from "@/lib/types";
 import { z } from "zod";
-import { capitalizeFirst } from "@/lib/format";
+import { capitalizeFirst, ORDER_STATUS_LABEL } from "@/lib/format";
+import { TRACKABLE, allowedFrom, canTransition } from "@/lib/order-status";
 
 export type AdminResult = { ok: true; message?: string; id?: string } | { ok: false; error: string };
 
@@ -125,8 +126,13 @@ const STATUSES = ["pending_payment", "awaiting_transfer", "paid", "preparing", "
 export async function setOrderStatus(id: string, status: string): Promise<AdminResult> {
   return guard(async (actor) => {
     const s = z.enum(STATUSES).parse(status) as OrderStatus;
-    const o = await repo.updateOrderStatus(z.string().uuid().parse(id), s, actor);
-    if (!o) return { ok: false as const, error: "Sipariş bulunamadı" };
+    const current = await repo.getOrderById(z.string().uuid().parse(id));
+    if (!current) return { ok: false as const, error: "Sipariş bulunamadı" };
+    // Geçiş kuralları sunucuda da uygulanır (arayüz atlatılsa bile)
+    if (!canTransition(current.status, s))
+      return { ok: false as const, error: `"${ORDER_STATUS_LABEL[current.status]}" durumundaki sipariş "${ORDER_STATUS_LABEL[s]}" yapılamaz.` };
+    const o = await repo.updateOrderStatus(current.id, s, actor);
+    if (!o) return { ok: false as const, error: "Sipariş durumu değişmiş olabilir; sayfayı yenileyin." };
     revalidatePath("/yonetim/siparisler");
     // Müşteriye bildirim: teslim edildi / iptal
     if (s === "delivered" || s === "cancelled") {
@@ -141,6 +147,10 @@ export async function setOrderTracking(id: string, carrier: string, trackingNo: 
   return guard(async (actor) => {
     const c = z.string().trim().min(2).max(40).parse(carrier);
     const t = z.string().trim().regex(/^[A-Za-z0-9-]{4,40}$/, "Geçersiz takip no").parse(trackingNo);
+    const current = await repo.getOrderById(z.string().uuid().parse(id));
+    if (!current) return { ok: false as const, error: "Sipariş bulunamadı" };
+    if (!TRACKABLE.includes(current.status))
+      return { ok: false as const, error: `"${ORDER_STATUS_LABEL[current.status]}" durumundaki siparişe kargo bilgisi girilemez.` };
     const o = await repo.setTracking(z.string().uuid().parse(id), c, t, actor);
     if (!o) return { ok: false as const, error: "Sipariş bulunamadı" };
     await sendOrderUpdate("shipped", o, await repo.getSettings()).catch((e) => console.error("[email]", e));

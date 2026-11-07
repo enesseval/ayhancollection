@@ -1,3 +1,4 @@
+import { NotFoundTitle } from "@/components/not-found-title";
 import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/inter/index.css";
 import "@fontsource-variable/playfair-display/index.css";
@@ -31,7 +32,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="tr">
-      <body className="min-h-dvh">{children}</body>
+      <body className="min-h-dvh">
+        {children}
+        <NotFoundTitle />
+      </body>
     </html>
   );
 }

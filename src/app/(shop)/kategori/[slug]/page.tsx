@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const special = SPECIAL[slug];
   if (special) return { title: special.name, description: special.description, alternates: { canonical: `/kategori/${slug}` } };
   const cat = (await repo.listCategories()).find((c) => c.slug === slug);
-  if (!cat) return {};
+  if (!cat) return { title: "Sayfa bulunamadı", robots: { index: false } };
   return {
     title: cat.name,
     description: cat.description ?? `${cat.name} modelleri uygun fiyat ve hızlı kargo ile Ayşe Ayhan Collection'da.`,
@@ -94,13 +94,14 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       )}
 
       <div className="mt-6">
-        <Suspense>
+        {/* Yer ayrılır: filtre çubuğu hidrasyonda belirince ızgara kaymasın (CLS) */}
+        <Suspense fallback={<div className="border-y border-line" style={{ minHeight: sizes.length > 1 && colors.length > 1 ? 158 : sizes.length > 1 || colors.length > 1 ? 110 : 62 }} aria-hidden="true" />}>
           <FilterBar sizes={sizes} colors={colors} total={products.length} />
         </Suspense>
       </div>
       <div className="mt-8">
         {products.length ? (
-          <ProductGrid products={products} preloadFirst={4} />
+          <ProductGrid products={products} preloadFirst={4} heading="h2" />
         ) : (
           <div className="py-20 text-center text-ink-soft">
             Bu filtrelere uygun ürün bulunamadı.{" "}

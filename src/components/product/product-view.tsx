@@ -89,12 +89,14 @@ export function ProductView({ product, placeholders, whatsapp, sizeChart, detail
       <div>
         <div
           ref={scroller}
+          tabIndex={0}
+          role="region"
+          aria-label="Ürün görselleri"
           className="no-scrollbar -mx-4 flex snap-x snap-mandatory overflow-x-auto sm:mx-0 lg:grid lg:grid-cols-2 lg:gap-3 lg:overflow-visible"
           onScroll={(e) => {
             const el = e.currentTarget;
             setActive(Math.round(el.scrollLeft / el.clientWidth));
           }}
-          aria-label="Ürün görselleri"
         >
           {media.map((m, i) => (
             <div key={m.key} className={`w-full shrink-0 snap-center bg-sand ${i === 0 ? "lg:col-span-2" : ""}`}>
@@ -105,6 +107,7 @@ export function ProductView({ product, placeholders, whatsapp, sizeChart, detail
                 height={m.height}
                 sizes={i === 0 ? "(max-width: 1024px) 100vw, 55vw" : "(max-width: 1024px) 100vw, 28vw"}
                 preload={i === 0}
+                fetchPriority={i === 0 ? "high" : undefined}
                 loading={i === 0 ? undefined : "lazy"}
                 placeholder={(placeholders[m.key] as `data:image/${string}`) ?? "empty"}
                 className="aspect-[4/5] h-auto w-full object-cover"

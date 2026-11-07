@@ -47,6 +47,7 @@ export function ProductImage({
       height={media.height}
       sizes={sizes}
       preload={preload}
+      fetchPriority={preload ? "high" : undefined}
       loading={preload ? undefined : "lazy"}
       placeholder={ph ? (ph as `data:image/${string}`) : "empty"}
       style={{ backgroundColor: thumbAvgColor(media.thumbhash) }}

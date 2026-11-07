@@ -7,6 +7,7 @@ import {
   seedSettings,
   seedUuid,
 } from "../seed/catalog";
+import { allowedFrom } from "../order-status";
 import type { Category, Coupon, DashboardStats, Order, OrderStatus, Product, Settings, SizeChart } from "../types";
 import { StockError, type CreateOrderInput, type ProductInput, type Repo } from "./repo";
 import { filterProducts, newOrderNo } from "./shared";
@@ -127,6 +128,18 @@ function categoryIdsFor(slug: string): string[] | null {
   const cat = cats.find((c) => c.slug === slug);
   if (!cat) return [];
   return [cat.id, ...cats.filter((c) => c.parentId === cat.id).map((c) => c.id)];
+}
+
+function restockItems(order: Order) {
+  const s = store();
+  if (order.couponCode) {
+    const c = s.coupons.find((x) => x.code === order.couponCode);
+    if (c) c.usedCount = Math.max(0, c.usedCount - 1);
+  }
+  for (const i of order.items) {
+    const v = s.products.flatMap((p) => p.variants).find((vv) => vv.id === i.variantId);
+    if (v) v.stock += i.qty;
+  }
 }
 
 function restock(order: Order) {
@@ -357,7 +370,12 @@ export const demoRepo: Repo = {
   async updateOrderStatus(id, status, actorId) {
     const o = store().orders.find((x) => x.id === id);
     if (!o) return null;
-    if (status === "cancelled" && (o.status === "pending_payment" || o.status === "awaiting_transfer")) restock(o);
+    if (!allowedFrom(status).includes(o.status)) return null;
+    if (status === "cancelled") {
+      if (o.status === "pending_payment" || o.status === "awaiting_transfer") restock(o);
+      // Ödenmiş ama kargolanmamış sipariş iptali: satılan adetler stoğa, kupon hakkı geri
+      else restockItems(o);
+    }
     o.status = status;
     o.updatedAt = new Date().toISOString();
     audit(actorId, `status:${status}`, "order", o.orderNo);

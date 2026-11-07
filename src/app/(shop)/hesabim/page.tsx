@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { safeNext } from "@/lib/safe-next";
 import { getSessionUser, DEMO_PASSWORD_DEFAULT } from "@/lib/auth";
 import { repo } from "@/lib/data";
 import { env, features } from "@/lib/env";
@@ -24,7 +25,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     return (
       <div className="container-x py-12">
         <h1 className="mb-8 text-center text-4xl">Hesabım</h1>
-        <AuthForms next={next.startsWith("/") ? next : "/hesabim"} demoHint={demoHint} />
+        <AuthForms next={safeNext(next, "/hesabim")} demoHint={demoHint} />
         <p className="mt-8 text-center text-sm text-muted">
           Üye olmadan verdiğiniz siparişler için <Link href="/siparis-takip" className="underline">sipariş takibi</Link> sayfasını kullanın.
         </p>

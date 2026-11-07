@@ -58,6 +58,11 @@ export function CheckoutForm({ defaultEmail, defaultName, loggedIn, demoPayment,
   if (items.length === 0)
     return (
       <div className="py-16 text-center">
+        {(formError || notice) && (
+          <p role="alert" className="mx-auto mb-6 max-w-md rounded border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
+            {formError ?? notice}
+          </p>
+        )}
         <p className="text-ink-soft">Sepetiniz boş.</p>
         <Link href="/" className="btn-primary mt-6">Alışverişe dön</Link>
       </div>
@@ -252,7 +257,7 @@ export function CheckoutForm({ defaultEmail, defaultName, loggedIn, demoPayment,
           ))}
         </ul>
         <Summary priced={priced} pending={pricing} />
-        <button type="submit" disabled={submitting || pricing || !priced} className="btn-primary w-full text-base">
+        <button type="submit" disabled={submitting || pricing || !priced || priced.lines.length === 0} className="btn-primary w-full text-base">
           {submitting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" /> İşleniyor…

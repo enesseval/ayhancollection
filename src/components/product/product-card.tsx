@@ -4,7 +4,8 @@ import type { Product } from "@/lib/types";
 import { ProductImage } from "./product-image";
 import { CardCarousel } from "./card-carousel";
 
-export function ProductCard({ product, preload = false }: { product: Product; preload?: boolean }) {
+export function ProductCard({ product, preload = false, heading = "h3" }: { product: Product; preload?: boolean; heading?: "h2" | "h3" }) {
+  const H = heading;
   const totalStock = product.variants.reduce((a, v) => a + v.stock, 0);
   const colors = [...firstHexByColor(product.variants)];
   const discount =
@@ -45,7 +46,7 @@ export function ProductCard({ product, preload = false }: { product: Product; pr
         ) : null}
       </div>
       <Link href={`/urun/${product.slug}`} className="mt-3 block space-y-1">
-        <h3 className="line-clamp-2 font-sans text-sm leading-snug text-ink decoration-1 underline-offset-2 group-hover:underline">{product.name}</h3>
+        <H className="line-clamp-2 font-sans text-sm leading-snug text-ink decoration-1 underline-offset-2 group-hover:underline">{product.name}</H>
         <p className="flex items-baseline gap-2 text-sm">
           <span className="font-semibold">
             {formatTRY(fromPrice)}
@@ -65,11 +66,11 @@ export function ProductCard({ product, preload = false }: { product: Product; pr
   );
 }
 
-export function ProductGrid({ products, preloadFirst = 0 }: { products: Product[]; preloadFirst?: number }) {
+export function ProductGrid({ products, preloadFirst = 0, heading = "h3" }: { products: Product[]; preloadFirst?: number; heading?: "h2" | "h3" }) {
   return (
     <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 md:grid-cols-3 lg:grid-cols-4">
       {products.map((p, i) => (
-        <ProductCard key={p.id} product={p} preload={i < preloadFirst} />
+        <ProductCard key={p.id} product={p} preload={i < preloadFirst} heading={heading} />
       ))}
     </div>
   );

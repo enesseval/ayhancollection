@@ -4,6 +4,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { env } from "../env";
 import { capitalizeFirst } from "../format";
 import { displayHex } from "../colors";
+import { allowedFrom } from "../order-status";
 import type { Category, Coupon, DashboardStats, Media, Order, OrderStatus, Product, Settings, Variant } from "../types";
 import { StockError, type Repo } from "./repo";
 import { filterProducts, newOrderNo } from "./shared";
@@ -335,14 +336,20 @@ export const supabaseRepo: Repo = {
 
   async updateOrderStatus(id, status: OrderStatus, actorId) {
     if (status === "cancelled") {
-      const o = await this.getOrderById(id);
-      if (o && (o.status === "pending_payment" || o.status === "awaiting_transfer")) {
-        await this.failOrder(id, "Yönetici iptali");
-        await audit(actorId, "status:cancelled", "order", o.orderNo);
-        return this.getOrderById(id);
+      // Tek SQL işleminde: bekleyen siparişte rezervasyon iadesi, ödenmiş/hazırlanan siparişte
+      // satılan adetlerin stoğa ve kupon hakkının geri verilmesi (yalnız bir kez)
+      const { error } = await db().rpc("admin_cancel_order", { p_order_id: id, p_reason: "Yönetici iptali" });
+      if (error) {
+        if (/INVALID_TRANSITION/.test(error.message)) return null;
+        throw new Error(error.message);
       }
+      const o = await this.getOrderById(id);
+      if (o) await audit(actorId, "status:cancelled", "order", o.orderNo);
+      return o;
     }
-    check(await db().from("orders").update({ status }).eq("id", id));
+    // Koşullu güncelleme: yalnız izin verilen önceki durumlardan
+    const updated = check(await db().from("orders").update({ status }).eq("id", id).in("status", allowedFrom(status)).select("id")) as any[];
+    if (!updated.length) return null;
     const o = await this.getOrderById(id);
     if (o) await audit(actorId, `status:${status}`, "order", o.orderNo);
     return o;

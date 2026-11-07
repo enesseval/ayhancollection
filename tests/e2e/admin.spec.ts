@@ -114,13 +114,18 @@ test("ürün listesi: filtreler ve kısayollar (taslağa al, arşivle, kopyala)"
   await r2.getByRole("button", { name: /kopyala/ }).click();
   await page.waitForURL(/\/yonetim\/urunler\/[0-9a-f-]{36}$/);
   await expect(page.locator("#name")).toHaveValue(/\(kopya\)/);
+  const copyId = page.url().split("/").pop()!;
+  const copyLink = `a[href="/yonetim/urunler/${copyId}"]`;
 
+  // Arşivlenen satır varsayılan listeden düşebilir; satırı kimliğiyle bulup sonucu arşiv filtresinde doğrularız
   await page.goto("/yonetim/urunler?q=kopya");
-  const copy = page.locator("tbody tr").filter({ hasText: "(kopya)" }).first();
+  const copy = page.locator("tbody tr").filter({ has: page.locator(copyLink) });
   await copy.getByRole("button", { name: /arşivle/ }).click();
-  await expect(copy.getByText(/arşivlendi/)).toBeVisible();
-  await page.goto("/yonetim/urunler?durum=arsiv&q=kopya");
-  await expect(page.locator("tbody tr").filter({ hasText: "(kopya)" }).first()).toBeVisible();
+  await expect(copy.getByText(/arşivlendi/).or(page.locator(copyLink)).first()).toBeVisible();
+  await expect.poll(async () => {
+    await page.goto("/yonetim/urunler?durum=arsiv&q=kopya");
+    return page.locator(`tbody ${copyLink}`).count();
+  }).toBeGreaterThan(0);
 });
 
 test("sipariş akışı: havale onayı → hazırlanıyor → kargoya verildi → teslim edildi", async ({ page }) => {

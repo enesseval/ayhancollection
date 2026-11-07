@@ -23,7 +23,7 @@ yönetici `admin@ayseayhan.demo`, müşteri `musteri@ayseayhan.demo`, şifre `Ay
 Mevcut otomatik testler `tests/` altında; önce `npx playwright test` çalıştır ve sonucu not et.
 
 **Aşama A — Keşif:** `src/app` altındaki tüm sayfaları, `src/app/actions` (Server Actions) ve `src/app/api`
-uç noktalarını listele. `FEATURE-MAP.md` ve `USER-FLOWS.md` oluştur.
+uç noktalarını listele. `docs/qa/FEATURE-MAP.md` ve `docs/qa/USER-FLOWS.md` oluştur.
 
 **Aşama B — Tarayıcıda keşif testi (Playwright MCP):** Masaüstü (1280x800) ve mobil (390x844) için:
 - Her sayfayı ziyaret et; konsol ve ağ hatalarını, kırık görsel/bağlantıları kaydet.
@@ -46,7 +46,7 @@ uç noktalarını listele. `FEATURE-MAP.md` ve `USER-FLOWS.md` oluştur.
 **Aşama D — Erişilebilirlik ve performans:** axe-core (`tests/accessibility`) sonuçlarını yorumla; Lighthouse
 (mobil) ile ana sayfa, kategori, ürün, sepet için skor ve en büyük 3 sorunu yaz.
 
-**Aşama E — Rapor:** `QA-REPORT.md` oluştur. Her bulgu: önem (Critical/High/Medium/Low/Info), açıklama,
+**Aşama E — Rapor:** `docs/qa/QA-REPORT.md` oluştur. Her bulgu: önem (Critical/High/Medium/Low/Info), açıklama,
 tekrar üretme adımları, beklenen ve gerçek davranış, ilgili dosya/uç nokta, ekran görüntüsü, önerilen çözüm.
 Testlerin geçtiğini yalnızca gerçekten çalıştırıp doğruladıktan sonra yaz.
 

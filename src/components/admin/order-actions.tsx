@@ -1,4 +1,5 @@
 "use client";
+import { ADMIN_TRANSITIONS } from "@/lib/order-status";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { confirmTransfer, setOrderStatus, setOrderTracking, type AdminResult } from "@/app/actions/admin";
@@ -27,14 +28,7 @@ export function OrderActions({ order }: { order: Order }) {
   const { pending, msg, run } = useAdminAction();
   const [carrier, setCarrier] = useState(order.carrier ?? "Yurtiçi Kargo");
   const [tracking, setTracking] = useState(order.trackingNo ?? "");
-  const next: Record<string, string[]> = {
-    paid: ["preparing", "cancelled"],
-    preparing: ["shipped", "cancelled"],
-    shipped: ["delivered"],
-    delivered: ["refunded"],
-    pending_payment: ["cancelled"],
-    awaiting_transfer: ["cancelled"],
-  };
+  const next = ADMIN_TRANSITIONS as Record<string, string[]>;
   return (
     <div className="card space-y-5 p-5">
       <h2 className="font-sans text-sm font-semibold">İşlemler</h2>

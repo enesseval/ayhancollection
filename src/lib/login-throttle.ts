@@ -4,12 +4,16 @@ import { db } from "./data/supabase";
 
 // Hatalı giriş koruması (iki katman):
 //  1) IP başına: 15 dk içinde 20 hatalı deneme → IP 15 dk engellenir (çok hesaba yayılan saldırı)
-//  2) E-posta başına: 15 dk içinde 5 hatalı deneme → hesap 15 dk GEÇİCİ kilitlenir (şifre deneme)
+//  2) E-posta + IP başına 5, e-posta başına (tüm IP'ler) 25 hatalı deneme → 15 dk GEÇİCİ kilit
 // Kalıcı kilit kullanılmaz: aksi halde kötü niyetli biri yönetici hesabını sürekli kilitleyebilir.
 // Sayaçlar Supabase'de tutulur (sunucusuz örnekler arasında ortak). Supabase yoksa bellek içi.
 
 export const LOGIN_POLICY = {
-  email: { max: 5, windowSec: 900, lockSec: 900 },
+  /** Aynı e-posta + aynı IP: 5 hata → 15 dk (şifre deneme) */
+  emailIp: { max: 5, windowSec: 900, lockSec: 900 },
+  /** Aynı e-posta, tüm IP'ler: 25 hata → 15 dk (dağıtık deneme). Tek IP'den biri yöneticiyi kilitleyemez. */
+  email: { max: 25, windowSec: 900, lockSec: 900 },
+  /** Aynı IP, tüm hesaplar: 20 hata → 15 dk (çok hesaba yayılan deneme) */
   ip: { max: 20, windowSec: 900, lockSec: 900 },
 };
 

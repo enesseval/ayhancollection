@@ -1,3 +1,4 @@
+import "./zod-tr";
 import { z } from "zod";
 
 // Hem istemci hem sunucuda kullanılan şemalar. Sunucu her zaman yeniden doğrular.
@@ -111,7 +112,7 @@ export const couponFormSchema = z.object({
   id: z.string().uuid().optional().or(z.literal("")),
   code: z.string().trim().toUpperCase().regex(/^[A-Z0-9]{3,24}$/, "Kod 3-24 harf/rakam olmalı"),
   type: z.enum(["percent", "fixed"]),
-  value: z.number().int().positive(),
+  value: z.number().int("Yüzde değeri tam sayı olmalı (ör. 12 veya 13)").positive("Değer 0'dan büyük olmalı"),
   minSubtotal: z.number().int().min(0),
   endsAt: z.string().optional().or(z.literal("")),
   usageLimit: z.number().int().positive().nullable(),

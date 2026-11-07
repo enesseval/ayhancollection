@@ -9,6 +9,32 @@
 | Araçlar | Playwright 1.65 (Chromium), Playwright MCP, @axe-core/playwright, Lighthouse 12 (mobil, simüle yavaşlatma), curl |
 | Kod | Uygulama kodu **değiştirilmedi**. QA senaryoları ayrı klasörde: `qa-artifacts/` (spec'ler, axe/Lighthouse JSON, ekran görüntüleri). |
 
+## Düzeltme durumu (8 Kasım 2026)
+
+| Bulgu | Durum | Yapılan |
+|---|---|---|
+| H-1 | ✅ Düzeltildi | `src/lib/safe-next.ts`: kontrol karakterleri, `\`, `//`, kodlanmış `%2F/%5C/%09/%0A/%0D` reddedilir; URL ayrıştırılıp yalnızca yol döner. Test: 7 saldırı varyantı |
+| L-1 | ✅ Düzeltildi | Aynı `safeNext` ile `\n`/`\r` artık 500 değil, varsayılan sayfaya döner |
+| M-1 | ✅ Düzeltildi | Ödenmiş/hazırlanan sipariş iptalinde stok + kupon sayacı geri alınır (Supabase: `admin_cancel_order` RPC, demo sürücü de aynı) |
+| M-2 | ✅ Düzeltildi | `src/lib/order-status.ts` geçiş tablosu; sunucu eylemi ve veri katmanı koşullu güncelleme ile denetler |
+| M-3 | ✅ Düzeltildi | Vercel'de `x-vercel-forwarded-for`/`x-real-ip`; başka ortamda yalnız `TRUST_PROXY=1` ise `X-Forwarded-For`'un son değeri |
+| L-11 | ✅ İyileştirildi | Kilit artık e-posta+IP çiftine bağlı (5 deneme); e-posta başına 25, IP başına 20 deneme üst sınırı. Saldırgan kendi IP'sini kilitler, gerçek kullanıcı girebilir. Test eklendi |
+| L-2 | ✅ Düzeltildi | Mobil menü: açılınca odak menüye, Esc kapatır, Tab menüde döner, odak düğmeye geri döner |
+| L-3 | ✅ Düzeltildi | Geri tuşu için `popstate` koruması |
+| L-4 | ✅ Düzeltildi | `src/lib/zod-tr.ts`: zod için Türkçe varsayılan mesajlar |
+| L-5 | ✅ Düzeltildi | Sepet kaydı yüklenirken temizlenir; sunucu yalnız geçersiz satırı düşürür; özet hazır değilken ödeme butonu pasif |
+| L-6 | ✅ Düzeltildi | Sepet boşalınca da stok hatası mesajı görünür |
+| L-7 | ✅ Düzeltildi | Ondalıklı yüzde reddedilir: "Yüzde değeri tam sayı olmalı" |
+| L-8 | ✅ Düzeltildi | Başarı rengi koyulaştırıldı (#1e6b24); yönetim sayfaları erişilebilirlik testine eklendi |
+| L-9 | ✅ Düzeltildi | Galeri odaklanabilir, şeritler `region`, yönetimde `<main>`, kategori/aramada kart başlıkları `h2`, boş tablo başlığına gizli metin. Test artık bu kuralları da denetliyor (masaüstü + mobil galeri) |
+| L-10 | ✅ Kısmen | İlk görsellere `fetchpriority="high"`, kategori filtre çubuğuna yer ayrıldı (CLS 0,165 → 0,001). Engelleyici CSS önerisi uygulanmadı |
+| I-1 | ✅ Düzeltildi | 404 sayfalarında sekme başlığı "Sayfa bulunamadı" (test eklendi) |
+| I-5 | ✅ Düzeltildi | Testlerde `networkidle` yerine `load` + öğe bekleme |
+| I-2, I-3, I-6 | ⏸ Açık | Bilinçli bırakıldı / gerçek servis gerektiriyor |
+| I-4 | ❓ Karar bekliyor | Sepetten büyük sabit kuponda yalnız kargo ödenmesi istenen davranış mı? |
+
+---
+
 ## 0. Özet
 
 **Mevcut otomatik testler:** `npx playwright test` → **77/77 geçti** (1,4 dk; masaüstü + mobil projeleri; erişilebilirlik, e2e, güvenlik).

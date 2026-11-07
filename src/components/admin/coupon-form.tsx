@@ -24,7 +24,7 @@ export function CouponForm({ coupons }: { coupons: Coupon[] }) {
             id: editing?.id ?? "",
             code: String(f.get("code") ?? ""),
             type,
-            value: type === "percent" ? Math.round(value) : Math.round(value * 100),
+            value: type === "percent" ? value : Math.round(value * 100),
             minSubtotal: Math.round(Number(String(f.get("minSubtotal") || 0).replace(",", ".")) * 100),
             endsAt: String(f.get("endsAt") ?? ""),
             usageLimit: limit ? Number(limit) : null,

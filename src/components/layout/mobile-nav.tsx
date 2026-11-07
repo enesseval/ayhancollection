@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { Menu, X, ChevronDown } from "lucide-react";
@@ -12,22 +12,48 @@ export function MobileNav({ items }: { items: Item[] }) {
   const pathname = usePathname();
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setOpen(false), [pathname]);
+  const panel = useRef<HTMLDivElement>(null);
+  const opener = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
+    if (!open) return () => {
+      document.body.style.overflow = "";
+    };
+    // Erişilebilirlik: açılınca odak menüye, Esc ile kapanır, Tab menü içinde döner, kapanınca odak geri
+    const btn = opener.current;
+    requestAnimationFrame(() => panel.current?.querySelector<HTMLElement>("a,button,summary")?.focus());
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+      if (e.key !== "Tab" || !panel.current) return;
+      const f = [...panel.current.querySelectorAll<HTMLElement>("a,button,summary")].filter((x) => x.offsetParent !== null);
+      if (!f.length) return;
+      const first = f[0];
+      const last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = "";
+      document.removeEventListener("keydown", onKey);
+      btn?.focus();
     };
   }, [open]);
   return (
     <>
-      <button type="button" className="btn-ghost !px-2.5" aria-label="Menüyü aç" aria-expanded={open} onClick={() => setOpen(true)}>
+      <button ref={opener} type="button" className="btn-ghost !px-2.5" aria-label="Menüyü aç" aria-expanded={open} onClick={() => setOpen(true)}>
         <Menu className="h-5 w-5" strokeWidth={1.5} />
       </button>
       {/* Header'daki backdrop-blur, fixed çocukları header kutusuna hapseder; bu yüzden body'ye portal */}
       {open && createPortal(
-        <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Menü">
+        <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label="Menü">
           <div className="absolute inset-0 bg-ink/40" onClick={() => setOpen(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-[86%] max-w-sm flex-col bg-canvas shadow-xl">
+          <div ref={panel} className="absolute inset-y-0 left-0 flex w-[86%] max-w-sm flex-col bg-canvas shadow-xl">
             <div className="flex h-16 items-center justify-between border-b border-line px-4">
               <span className="font-serif text-lg tracking-[0.18em]">MENÜ</span>
               <button type="button" className="btn-ghost !px-2.5" aria-label="Menüyü kapat" onClick={() => setOpen(false)}>

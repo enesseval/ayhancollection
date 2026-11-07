@@ -10,7 +10,7 @@ export function DemoBar() {
   if (!isDemoData && features.iyzico) return null;
   const parts = [isDemoData && "örnek ürün verisi", !features.iyzico && "test ödemesi"].filter(Boolean).join(" ve ");
   return (
-    <div className="bg-blush-soft px-4 py-1.5 text-center text-[12px] text-ink">
+    <div role="region" aria-label="Demo bilgisi" className="bg-blush-soft px-4 py-1.5 text-center text-[12px] text-ink">
       <b>Demo sürüm:</b> Bu sitede {parts} kullanılıyor; gerçek sipariş ve ödeme alınmaz.
     </div>
   );

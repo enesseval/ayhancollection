@@ -52,7 +52,8 @@ test("girişten sonra dış siteye yönlendirme yapılmaz (open redirect)", asyn
   await expect(page.getByText("Siparişlerim")).toBeVisible();
   await page.locator("main").getByRole("button", { name: "Çıkış yap" }).click();
   await page.waitForURL((u) => u.pathname === "/");
-  for (const next of ["https://evil.example", "//evil.example", "/\\evil.example"]) {
+  // Kontrol karakterleri (\t, \n) ve kodlanmış eğik çizgiler tarayıcıda "//" gibi yorumlanabilir
+  for (const next of ["https://evil.example", "//evil.example", "/\\evil.example", "/\t/evil.example", "/\n/evil.example", "/%09/evil.example", "/%2F/evil.example"]) {
     await login(page, email, "TestSifre-2026x", next);
     expect(new URL(page.url()).host).toBe("localhost:3100");
     await page.context().clearCookies();
@@ -63,6 +64,30 @@ test("hatalı şifre denemelerinde hesap geçici kilitlenir", async ({ page }) =
   const email = `${uniq("kilit")}@example.com`;
   for (let i = 1; i <= 5; i++) await login(page, email, `yanlis-${i}`);
   await expect(page.getByText(/Çok fazla hatalı deneme yapıldı/)).toBeVisible();
+});
+
+test("kilit saldırganın IP'sine bağlı: başka IP'den doğru şifreyle giriş yapılabilir", async ({ page, browser }) => {
+  const email = `${uniq("kilit2")}@example.com`;
+  await page.goto("/hesabim");
+  await page.getByRole("tab", { name: "Üye ol" }).click();
+  const form = page.locator("form").filter({ has: page.locator('input[name="fullName"]') });
+  await form.locator('[name="fullName"]').fill("Kilit Test");
+  await form.locator('[name="email"]').fill(email);
+  await form.locator('[name="password"]').fill("TestSifre-2026x");
+  await form.locator('[name="acceptKvkk"]').check();
+  await form.getByRole("button", { name: "Üye ol" }).click();
+  await expect(page.getByText("Siparişlerim")).toBeVisible();
+  await page.context().clearCookies();
+  // Saldırgan (bu IP) 5 kez yanlış şifre dener → bu IP için kilitlenir, doğru şifre de reddedilir
+  for (let i = 1; i <= 5; i++) await login(page, email, `yanlis-${i}`);
+  await login(page, email, "TestSifre-2026x");
+  await expect(page.getByText(/Çok fazla hatalı deneme yapıldı/)).toBeVisible();
+  // Gerçek kullanıcı başka bir IP'den girebilir
+  const other = await browser.newContext({ extraHTTPHeaders: { "x-forwarded-for": "10.250.250.250" } });
+  const p2 = await other.newPage();
+  await login(p2, email, "TestSifre-2026x");
+  await expect(p2.getByText("Siparişlerim")).toBeVisible();
+  await other.close();
 });
 
 test("ürün metinlerinde XSS çalışmaz (HTML/script düz metin olarak kalır)", async ({ page }) => {

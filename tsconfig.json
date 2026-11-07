@@ -40,6 +40,7 @@
   "exclude": [
     "node_modules",
     "tests",
+    "qa-artifacts",
     "playwright.config.ts",
     "playwright-report",
     "test-results"

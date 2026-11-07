@@ -33,6 +33,36 @@ type CartState = {
   replaceFromServer: (items: { variantId: string; qty: number; unitPrice: number; maxQty: number }[]) => void;
 };
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const str = (v: unknown, max = 200) => (typeof v === "string" ? v.slice(0, max) : "");
+
+function sanitizeItems(raw: unknown): CartItem[] {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  const out: CartItem[] = [];
+  for (const r of raw.slice(0, 30)) {
+    if (!r || typeof r !== "object") continue;
+    const i = r as Record<string, unknown>;
+    if (typeof i.variantId !== "string" || !UUID.test(i.variantId) || seen.has(i.variantId)) continue;
+    if (typeof i.qty !== "number" || !Number.isFinite(i.qty)) continue;
+    const maxQty = typeof i.maxQty === "number" && Number.isFinite(i.maxQty) ? Math.max(1, Math.min(Math.floor(i.maxQty), 10)) : 10;
+    const qty = Math.max(1, Math.min(Math.floor(i.qty), maxQty));
+    seen.add(i.variantId);
+    out.push({
+      variantId: i.variantId,
+      qty,
+      maxQty,
+      productSlug: str(i.productSlug),
+      productName: str(i.productName),
+      size: str(i.size, 40),
+      color: str(i.color, 40),
+      unitPrice: typeof i.unitPrice === "number" && Number.isFinite(i.unitPrice) && i.unitPrice >= 0 ? i.unitPrice : 0,
+      imageKey: typeof i.imageKey === "string" ? i.imageKey : null,
+    });
+  }
+  return out;
+}
+
 export const useCart = create<CartState>()(
   persist(
     (set) => ({
@@ -74,6 +104,15 @@ export const useCart = create<CartState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({ items: s.items, coupon: s.coupon }),
       version: 1,
+      // localStorage elle bozulmuş/eski olabilir: geçersiz satırlar atılır, adetler sınırlanır
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as { items?: unknown; coupon?: unknown };
+        return {
+          ...current,
+          items: sanitizeItems(p.items),
+          coupon: typeof p.coupon === "string" ? p.coupon.slice(0, 24) : "",
+        };
+      },
     },
   ),
 );

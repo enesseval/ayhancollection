@@ -1,4 +1,5 @@
 "use server";
+import { safeNext } from "@/lib/safe-next";
 import { redirect } from "next/navigation";
 import { login, logout, register } from "@/lib/auth";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
@@ -14,12 +15,6 @@ function fieldErrors(issues: { path: PropertyKey[]; message: string }[]) {
   return out;
 }
 
-function safeNext(next: FormDataEntryValue | null, fallback: string) {
-  const n = String(next ?? "");
-  // Açık yönlendirme (open redirect) önleme: yalnız site içi göreli yollar
-  return n.startsWith("/") && !n.startsWith("//") && !n.startsWith("/\\") ? n : fallback;
-}
-
 export async function loginAction(_: FormState, fd: FormData): Promise<FormState> {
   const values = { email: String(fd.get("email") ?? "").slice(0, 120) };
   const parsed = loginSchema.safeParse({ email: fd.get("email"), password: fd.get("password") });
@@ -27,9 +22,12 @@ export async function loginAction(_: FormState, fd: FormData): Promise<FormState
   const rl = await rateLimit("login");
   if (!rl.ok) return { error: `Çok fazla deneme. ${rl.retryAfter} sn sonra tekrar deneyin.`, values };
 
-  const emailKey = `email:${parsed.data.email.toLowerCase()}`;
-  const ipKey = `ip:${await clientIp()}`;
-  const locked = Math.max(await lockedFor(emailKey), await lockedFor(ipKey));
+  const ip = await clientIp();
+  const email = parsed.data.email.toLowerCase();
+  const emailIpKey = `email-ip:${email}|${ip}`;
+  const emailKey = `email:${email}`;
+  const ipKey = `ip:${ip}`;
+  const locked = Math.max(await lockedFor(emailIpKey), await lockedFor(emailKey), await lockedFor(ipKey));
   if (locked > 0) {
     // Kilitliyken şifre hiç denenmez (doğru şifre bile kabul edilmez)
     return { error: `Çok fazla hatalı deneme yapıldı. Güvenliğiniz için giriş ${minutes(locked)} dakika kapatıldı.`, values };
@@ -38,11 +36,16 @@ export async function loginAction(_: FormState, fd: FormData): Promise<FormState
   const res = await login(parsed.data.email, parsed.data.password);
   if (!res.ok && res.systemError) return { error: res.error, values };
   if (!res.ok) {
-    const [byEmail, byIp] = await Promise.all([registerFail(emailKey, LOGIN_POLICY.email), registerFail(ipKey, LOGIN_POLICY.ip)]);
-    const lock = Math.max(byEmail, byIp);
+    const locks = await Promise.all([
+      registerFail(emailIpKey, LOGIN_POLICY.emailIp),
+      registerFail(emailKey, LOGIN_POLICY.email),
+      registerFail(ipKey, LOGIN_POLICY.ip),
+    ]);
+    const lock = Math.max(...locks);
     if (lock > 0) return { error: `Çok fazla hatalı deneme yapıldı. Güvenliğiniz için giriş ${minutes(lock)} dakika kapatıldı.`, values };
     return { error: res.error, values };
   }
+  await clearFails(emailIpKey);
   await clearFails(emailKey);
   redirect(safeNext(fd.get("next"), res.user.role === "admin" ? "/yonetim" : "/hesabim"));
 }

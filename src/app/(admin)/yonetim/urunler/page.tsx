@@ -99,7 +99,7 @@ export default async function AdminProducts({ searchParams }: { searchParams: Pr
             <Link
               key={s.v}
               href={href({ stok: s.v })}
-              className={`rounded-full border px-3 py-1 text-xs ${on ? "border-ink bg-ink text-white" : "border-line bg-white hover:border-ink"} ${!on && s.v && n === 0 ? "opacity-50" : ""}`}
+              className={`rounded-full border px-3 py-1 text-xs ${on ? "border-ink bg-ink text-white" : "border-line bg-white hover:border-ink"} ${!on && s.v && n === 0 ? "text-muted" : ""}`}
             >
               {s.label}
               {s.v && <span className="ml-1">({n})</span>}
@@ -181,7 +181,7 @@ export default async function AdminProducts({ searchParams }: { searchParams: Pr
                   </td>
                   <td className="px-4 py-2.5 text-muted">{p.soldCount || "—"}</td>
                   <td className="px-4 py-2.5">
-                    <span className={`rounded-full px-2 py-0.5 text-xs ${p.status === "active" ? "bg-success/10 text-success" : p.status === "archived" ? "bg-ink/10 text-muted" : "bg-sand"}`}>{STATUS[p.status]}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-xs ${p.status === "active" ? "bg-success/10 text-success" : p.status === "archived" ? "bg-ink/10 text-ink-soft" : "bg-sand"}`}>{STATUS[p.status]}</span>
                   </td>
                   <td className="px-2 py-2.5">
                     <ProductRowActions id={p.id} name={p.name} slug={p.slug} status={p.status} />

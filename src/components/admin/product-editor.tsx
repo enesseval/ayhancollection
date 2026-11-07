@@ -274,10 +274,25 @@ function useUnsavedGuard(dirty: boolean) {
         e.stopPropagation();
       }
     };
+    // Tarayıcının Geri tuşu: aynı adrese bir koruma kaydı eklenir (Next.js durum bilgisi korunarak);
+    // Geri'ye basılınca onay istenir, vazgeçilirse koruma yeniden eklenir
+    const guardState = () => ({ ...(history.state ?? {}), __aacGuard: true });
+    if (!history.state?.__aacGuard) history.pushState(guardState(), "", location.href);
+    const onPop = () => {
+      if (history.state?.__aacGuard) return;
+      if (confirm("Kaydedilmemiş değişiklikler var. Kaydetmeden çıkmak istiyor musunuz?")) {
+        window.removeEventListener("popstate", onPop);
+        history.back();
+      } else {
+        history.pushState(guardState(), "", location.href);
+      }
+    };
     window.addEventListener("beforeunload", onBeforeUnload);
+    window.addEventListener("popstate", onPop);
     document.addEventListener("click", onClick, true);
     return () => {
       window.removeEventListener("beforeunload", onBeforeUnload);
+      window.removeEventListener("popstate", onPop);
       document.removeEventListener("click", onClick, true);
     };
   }, [dirty]);

@@ -21,7 +21,7 @@ type Props = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const p = await repo.getProductBySlug(slug);
-  if (!p) return {};
+  if (!p) return { title: "Sayfa bulunamadı", robots: { index: false } };
   const img = p.media[0] ? mediaUrl(p.media[0].key, 960) : undefined;
   return {
     title: p.name,

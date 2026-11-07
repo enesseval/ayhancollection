@@ -21,10 +21,22 @@ export type RuleName = keyof typeof RULES;
 
 const g = globalThis as unknown as { __aacRl?: Map<string, number[]>; __aacUp?: Map<string, Ratelimit> };
 
+/**
+ * İstemci IP'si. X-Forwarded-For istemci tarafından uydurulabildiği için yalnız güvenilir kaynaklar:
+ *  - Vercel: x-vercel-forwarded-for / x-real-ip (Vercel kenar ağı yazar, istemci değiştiremez)
+ *  - Kendi sunucunuz bir proxy arkasındaysa TRUST_PROXY=1: zincirdeki SON (proxy'nin eklediği) değer
+ *  - Aksi halde başlıklara güvenilmez; tüm istekler tek anahtarda sayılır (güvenli varsayılan)
+ */
 export async function clientIp(): Promise<string> {
   const h = await headers();
-  // Vercel'de x-forwarded-for'un ilk değeri istemci IP'sidir
-  return (h.get("x-forwarded-for")?.split(",")[0] || h.get("x-real-ip") || "0.0.0.0").trim();
+  if (process.env.VERCEL) {
+    return (h.get("x-vercel-forwarded-for")?.split(",")[0] || h.get("x-real-ip") || h.get("x-forwarded-for")?.split(",")[0] || "0.0.0.0").trim();
+  }
+  if (process.env.TRUST_PROXY === "1") {
+    const chain = (h.get("x-forwarded-for") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+    return chain[chain.length - 1] || h.get("x-real-ip") || "0.0.0.0";
+  }
+  return "local";
 }
 
 export async function rateLimit(rule: RuleName, key?: string): Promise<{ ok: boolean; retryAfter: number }> {

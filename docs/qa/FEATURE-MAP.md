@@ -55,7 +55,7 @@ Proxy (`src/proxy.ts`) yalnız çerez *varlığına* bakıp `/hesabim?next=` yö
 | `checkout.ts` | `placeOrder` | Herkes | `checkoutSchema`; 5/10 dk; Turnstile (anahtar varsa); sunucuda yeniden fiyatlama + stok rezervi (kart 15 dk, havale 24 sa) |
 | | `demoPay` | İmzalı token | Yalnız iyzico yokken; `outcome=success|fail`; ret 5/10 dk |
 | `admin.ts` | `saveProduct`, `archiveProduct`, `setProductStatus`, `deleteProduct`, `duplicateProduct`, `removeMedia`, `reorderMedia` | `requireAdmin()` | `productFormSchema`; yayına alma kuralı: ≥1 görsel + stoklu ≥1 varyant |
-| | `setOrderStatus`, `setOrderTracking`, `confirmTransfer` | `requireAdmin()` | Durum değeri enum ile sınırlı, **geçiş kuralı yok** (bkz. QA-REPORT) |
+| | `setOrderStatus`, `setOrderTracking`, `confirmTransfer` | `requireAdmin()` | Durum değeri enum ile sınırlı; geçişler `src/lib/order-status.ts` kurallarıyla sunucuda denetlenir (M-2 düzeltildi) |
 | | `saveCoupon` | `requireAdmin()` | `couponFormSchema`, yüzde ≤ 100 |
 | | `saveSettings` | `requireAdmin()` | IBAN/WhatsApp biçim kontrolü |
 | | `saveSizeChart`, `deleteSizeChart` | `requireAdmin()` | ≤ 8000 karakter Markdown |

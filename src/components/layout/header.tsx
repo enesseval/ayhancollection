@@ -17,7 +17,7 @@ export function Header({ categories, announcement }: { categories: Category[]; a
   ];
   return (
     <>
-      <div className="bg-ink px-4 py-2 text-center text-[12px] tracking-wide text-white">{announcement}</div>
+      <div role="region" aria-label="Duyuru" className="bg-ink px-4 py-2 text-center text-[12px] tracking-wide text-white">{announcement}</div>
       <header className="sticky top-0 z-40 border-b border-line bg-canvas/95 backdrop-blur supports-[backdrop-filter]:bg-canvas/85">
         <div className="container-x flex h-16 items-center justify-between gap-4">
           <div className="flex items-center gap-2 lg:hidden">

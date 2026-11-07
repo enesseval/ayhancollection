@@ -51,6 +51,8 @@ export default defineConfig({
       TURNSTILE_SECRET_KEY: "",
       NEXT_PUBLIC_SITE_URL: BASE,
       SESSION_SECRET: "e2e-test-session-secret-0123456789-abcdefgh",
+      // Testler her istekte farklı sahte IP gönderir (hız sınırları testleri birbirine bağlamasın)
+      TRUST_PROXY: "1",
       CRON_SECRET: "e2e-cron-secret",
       NEXT_TELEMETRY_DISABLED: "1",
     },

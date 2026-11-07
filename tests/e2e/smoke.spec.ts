@@ -32,9 +32,11 @@ for (const p of PAGES) {
 }
 
 test("olmayan sayfa ve ürün 404 döner", async ({ page }) => {
-  expect((await page.goto("/yok-boyle-bir-sayfa"))?.status()).toBe(404);
-  expect((await page.goto("/urun/yok-boyle-bir-urun"))?.status()).toBe(404);
-  expect((await page.goto("/kategori/yok-boyle-bir-kategori"))?.status()).toBe(404);
+  for (const path of ["/yok-boyle-bir-sayfa", "/urun/yok-boyle-bir-urun", "/kategori/yok-boyle-bir-kategori"]) {
+    expect((await page.goto(path))?.status()).toBe(404);
+    // Sekme başlığı da 404'ü söylemeli (hidrasyondan sonra da)
+    await expect(page).toHaveTitle(/Sayfa bulunamadı/);
+  }
 });
 
 test("ana sayfadaki iç bağlantılar kırık değil", async ({ page, request }) => {
@@ -54,7 +56,8 @@ test("ürün görselleri yükleniyor (kırık görsel yok)", async ({ page }) =>
   const imgs = page.locator("main img");
   await expect(imgs.first()).toBeVisible();
   // Görünür alandaki görsellerin hepsi gerçekten yüklenmiş olmalı
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("load");
+  await page.waitForFunction(() => [...document.querySelectorAll("main img")].filter((i) => i.getBoundingClientRect().top < innerHeight).every((i) => (i as HTMLImageElement).complete));
   const broken = await page.$$eval("main img", (list: HTMLImageElement[]) =>
     list.filter((i) => i.getBoundingClientRect().top < innerHeight && i.complete && i.naturalWidth === 0).map((i) => i.getAttribute("src")),
   );

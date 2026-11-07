@@ -46,3 +46,9 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# QA çalıştırma çıktıları (rapor docs/qa altında; ağır/yeniden üretilebilir dosyalar repoya girmez)
+/qa-artifacts/test-results/
+/qa-artifacts/lh-*.json
+/qa-artifacts/axe-*.json
+/.playwright-mcp/
