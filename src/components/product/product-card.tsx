@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { formatTRY } from "@/lib/format";
+import { firstHexByColor, formatTRY } from "@/lib/format";
 import type { Product } from "@/lib/types";
 import { ProductImage } from "./product-image";
 import { CardCarousel } from "./card-carousel";
 
 export function ProductCard({ product, preload = false }: { product: Product; preload?: boolean }) {
   const totalStock = product.variants.reduce((a, v) => a + v.stock, 0);
-  const colors = [...new Map(product.variants.map((v) => [v.color, v.colorHex])).entries()];
+  const colors = [...firstHexByColor(product.variants)];
   const discount =
     product.compareAtPrice && product.compareAtPrice > product.basePrice
       ? Math.round((1 - product.basePrice / product.compareAtPrice) * 100)

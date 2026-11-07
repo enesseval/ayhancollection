@@ -5,6 +5,7 @@ import { Plus, Trash2, Wand2 } from "lucide-react";
 import { archiveProduct, saveProduct } from "@/app/actions/admin";
 import { slugify } from "@/lib/format";
 import { MarkdownField } from "./markdown-field";
+import { colorHexFor } from "@/lib/colors";
 import type { Category, Product } from "@/lib/types";
 import { Flash, useAdminAction } from "./order-actions";
 
@@ -25,8 +26,19 @@ export function ProductEditor({ product, categories }: { product: Product | null
   const [matrixColors, setMatrixColors] = useState("");
   const [matrixSizes, setMatrixSizes] = useState("36, 38, 40, 42, 44, 46");
   const [matrixHex, setMatrixHex] = useState("#1F2A44");
+  const [matrixHexTouched, setMatrixHexTouched] = useState(false);
 
   const update = (i: number, patch: Partial<Row>) => setRows((r) => r.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  // Renk kodu renge aittir: bir satırda değişince aynı renkteki tüm satırlara uygulanır
+  const setColorHex = (color: string, hex: string) =>
+    setRows((r) => r.map((x) => (x.color.trim().toLocaleLowerCase("tr-TR") === color.trim().toLocaleLowerCase("tr-TR") ? { ...x, colorHex: hex } : x)));
+  // Renk adı değişince: aynı adda başka satır varsa onun kodu, yoksa addan tahmin
+  const setColorName = (i: number, color: string) =>
+    setRows((r) => {
+      const same = r.find((x, j) => j !== i && x.color.trim().toLocaleLowerCase("tr-TR") === color.trim().toLocaleLowerCase("tr-TR"));
+      const hex = same?.colorHex ?? colorHexFor(color);
+      return r.map((x, j) => (j === i ? { ...x, color, ...(hex ? { colorHex: hex } : {}) } : x));
+    });
   const skuBase = (slug || slugify(name)).split("-").map((w) => w[0]).join("").toUpperCase().slice(0, 5) || "URN";
 
   const genMatrix = () => {
@@ -39,7 +51,11 @@ export function ProductEditor({ product, categories }: { product: Product | null
         add.push({
           id: "",
           color: c,
-          colorHex: matrixHex,
+          // Önce aynı renkteki mevcut satırın kodu, sonra addan tahmin, en son seçilen kod
+          colorHex:
+            rows.find((r) => r.color.trim().toLocaleLowerCase("tr-TR") === c.toLocaleLowerCase("tr-TR"))?.colorHex ??
+            (colors.length > 1 ? colorHexFor(c) : undefined) ??
+            (matrixHexTouched ? matrixHex : colorHexFor(c) ?? matrixHex),
           size: s,
           stock: 0,
           priceOverride: "",
@@ -179,7 +195,7 @@ export function ProductEditor({ product, categories }: { product: Product | null
             <label className="label" htmlFor="ms">Bedenler (virgülle)</label>
             <input id="ms" className="input" value={matrixSizes} onChange={(e) => setMatrixSizes(e.target.value)} />
           </div>
-          <input type="color" aria-label="Renk kodu" value={matrixHex} onChange={(e) => setMatrixHex(e.target.value)} className="h-11 w-14 rounded border border-line" />
+          <input type="color" aria-label="Renk kodu" value={matrixHex} onChange={(e) => { setMatrixHex(e.target.value); setMatrixHexTouched(true); }} title="Tek renk eklerken kod; birden çok renkte kodlar addan otomatik gelir" className="h-11 w-14 rounded border border-line" />
           <button type="button" className="btn-outline" onClick={genMatrix}><Wand2 className="h-4 w-4" /> Matris oluştur</button>
         </div>
         <div className="overflow-x-auto">
@@ -198,8 +214,8 @@ export function ProductEditor({ product, categories }: { product: Product | null
             <tbody>
               {rows.map((r, i) => (
                 <tr key={i} className="border-t border-line">
-                  <td className="py-1.5 pr-2"><input className="input !min-h-9 !py-1" value={r.color} onChange={(e) => update(i, { color: e.target.value })} /></td>
-                  <td className="py-1.5 pr-2"><input type="color" className="h-9 w-12 rounded border border-line" value={r.colorHex} onChange={(e) => update(i, { colorHex: e.target.value })} aria-label="Renk kodu" /></td>
+                  <td className="py-1.5 pr-2"><input className="input !min-h-9 !py-1" value={r.color} onChange={(e) => setColorName(i, e.target.value)} /></td>
+                  <td className="py-1.5 pr-2"><input type="color" className="h-9 w-12 rounded border border-line" value={r.colorHex} onChange={(e) => setColorHex(r.color, e.target.value)} aria-label="Renk kodu" /></td>
                   <td className="py-1.5 pr-2"><input className="input !min-h-9 !w-20 !py-1" value={r.size} onChange={(e) => update(i, { size: e.target.value })} /></td>
                   <td className="py-1.5 pr-2"><input className="input !min-h-9 !py-1 font-mono text-xs" value={r.sku} onChange={(e) => update(i, { sku: e.target.value })} /></td>
                   <td className="py-1.5 pr-2"><input type="number" min={0} className={`input !min-h-9 !w-24 !py-1 ${r.stock === 0 ? "!border-danger/40" : ""}`} value={r.stock} onChange={(e) => update(i, { stock: Number(e.target.value) })} /></td>

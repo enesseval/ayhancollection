@@ -83,6 +83,7 @@ export function Summary({
           <dd>{priced ? formatTRY(priced.total) : "…"}</dd>
         </div>
       </dl>
+      <p className="text-xs text-muted">KDV dahildir.</p>
     </div>
   );
 }

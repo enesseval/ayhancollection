@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { useMemo, useRef, useState } from "react";
 import { Minus, Plus, MessageCircle, Ruler, X, Check } from "lucide-react";
-import { formatTRY, waLink } from "@/lib/format";
+import { firstHexByColor, formatTRY, waLink } from "@/lib/format";
 import { useCart } from "@/components/cart/store";
 import type { Product } from "@/lib/types";
 
@@ -55,7 +55,7 @@ const SIZE_CHARTS: Record<Props["sizeChart"], { head: string[]; rows: string[][]
 
 export function ProductView({ product, placeholders, whatsapp, sizeChart, details }: Props) {
   const colors = useMemo(
-    () => [...new Map(product.variants.map((v) => [v.color, v.colorHex])).entries()].map(([name, hex]) => ({ name, hex })),
+    () => [...firstHexByColor(product.variants)].map(([name, hex]) => ({ name, hex })),
     [product.variants],
   );
   const firstInStock = product.variants.find((v) => v.stock > 0);

@@ -73,3 +73,10 @@ export function capitalizeFirst(s: string): string {
   const first = String.fromCodePoint(t.codePointAt(0)!);
   return first.toLocaleUpperCase("tr-TR") + t.slice(first.length);
 }
+
+/** Renk → kod; aynı renkte farklı kodlar varsa ilk varyantınki (tutarlı görünüm) */
+export function firstHexByColor(variants: { color: string; colorHex: string }[]): [string, string][] {
+  const m = new Map<string, string>();
+  for (const v of variants) if (!m.has(v.color)) m.set(v.color, v.colorHex);
+  return [...m.entries()];
+}

@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { env } from "../env";
 import { capitalizeFirst } from "../format";
+import { displayHex } from "../colors";
 import type { Category, Coupon, DashboardStats, Media, Order, OrderStatus, Product, Settings, Variant } from "../types";
 import { StockError, type Repo } from "./repo";
 import { filterProducts, newOrderNo } from "./shared";
@@ -30,8 +31,8 @@ function mapVariant(v: any): Variant {
     productId: v.product_id,
     sku: v.sku,
     size: v.size,
-    color: v.color,
-    colorHex: v.color_hex,
+    color: capitalizeFirst(v.color),
+    colorHex: displayHex(v.color, v.color_hex),
     stock: v.stock,
     priceOverride: v.price_override,
   };
@@ -40,7 +41,7 @@ function mapVariant(v: any): Variant {
 function mapProduct(r: any): Product {
   const media: Media[] = [...(r.product_media ?? [])]
     .sort((a: any, b: any) => a.sort - b.sort)
-    .map((m: any) => ({ key: m.storage_key, width: m.width, height: m.height, thumbhash: m.thumbhash, alt: m.alt, color: m.color }));
+    .map((m: any) => ({ key: m.storage_key, width: m.width, height: m.height, thumbhash: m.thumbhash, alt: m.alt, color: m.color ? capitalizeFirst(m.color) : m.color }));
   return {
     id: r.id,
     slug: r.slug,
