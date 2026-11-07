@@ -164,7 +164,7 @@ export function ProductView({ product, placeholders, whatsapp, sizeChart }: Prop
             </>
           )}
         </div>
-        <p className="mt-1 text-xs text-muted">KDV dahil · 3 ve 6 taksit seçenekleriyle</p>
+        <p className="mt-1 text-xs text-muted">KDV dahil</p>
 
         <div className="mt-6">
           <p className="mb-2 text-sm">
