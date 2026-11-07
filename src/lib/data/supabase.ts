@@ -1,4 +1,5 @@
 import "server-only";
+import { randomBytes } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { env } from "../env";
 import type { Category, Coupon, DashboardStats, Media, Order, OrderStatus, Product, Settings, Variant } from "../types";
@@ -351,9 +352,36 @@ export const supabaseRepo: Repo = {
   },
 
   async upsertProduct(input, actorId) {
+    // Adres (slug) çakışması: yeni üründe otomatik "-2", "-3" eklenir; düzenlemede kullanıcıya bildirilir
+    let slug = input.slug;
+    const taken = async (sl: string) =>
+      ((check(await db().from("products").select("id").eq("slug", sl).limit(1)) as any[])[0]?.id as string | undefined);
+    const owner = await taken(slug);
+    if (owner && owner !== input.id) {
+      if (input.id) throw new Error("Bu adres (URL) başka bir ürün tarafından kullanılıyor. Farklı bir adres yazın.");
+      for (let i = 2; i < 50; i++) {
+        const candidate = `${input.slug.slice(0, 76)}-${i}`;
+        if (!(await taken(candidate))) {
+          slug = candidate;
+          break;
+        }
+      }
+    }
+
+    // SKU çakışması: başka bir ürünün SKU'su kullanılmışsa sonuna ek getirilerek benzersizleştirilir
+    const wanted = input.variants.map((v) => v.sku);
+    const clash = new Set(
+      (check(await db().from("product_variants").select("sku, product_id").in("sku", wanted)) as any[])
+        .filter((r) => r.product_id !== input.id)
+        .map((r) => r.sku as string),
+    );
+    const variants = input.variants.map((v) =>
+      clash.has(v.sku) ? { ...v, sku: `${v.sku.slice(0, 33)}-${randomBytes(2).toString("hex").toUpperCase()}` } : v,
+    );
+
     const row = {
       ...(input.id ? { id: input.id } : {}),
-      slug: input.slug,
+      slug,
       name: input.name,
       description: input.description,
       fabric: input.fabric,
@@ -367,16 +395,21 @@ export const supabaseRepo: Repo = {
     };
     const saved = check(await db().from("products").upsert(row).select("id").single()) as any;
     const productId = saved.id as string;
-    const existing = check(await db().from("product_variants").select("id").eq("product_id", productId)) as any[];
-    const keepIds = input.variants.map((v) => v.id).filter(Boolean);
-    const toDelete = existing.map((e) => e.id).filter((id) => !keepIds.includes(id));
-    if (toDelete.length) check(await db().from("product_variants").delete().in("id", toDelete));
-    if (input.variants.length) {
-      check(
-        await db()
-          .from("product_variants")
-          .upsert(
-            input.variants.map((v) => ({
+    try {
+      const existing = check(await db().from("product_variants").select("id").eq("product_id", productId)) as any[];
+      const keepIds = variants.map((v) => v.id).filter(Boolean);
+      const toDelete = existing.map((e) => e.id).filter((id) => !keepIds.includes(id));
+      // Siparişte kullanılmış varyant silinemez (FK) -> stok 0'a çekilir
+      for (const id of toDelete) {
+        const del = await db().from("product_variants").delete().eq("id", id);
+        if (del.error) check(await db().from("product_variants").update({ stock: 0 }).eq("id", id));
+      }
+      if (variants.length) {
+        check(
+          await db()
+            .from("product_variants")
+            .upsert(
+              variants.map((v) => ({
               ...(v.id ? { id: v.id } : {}),
               product_id: productId,
               sku: v.sku,
@@ -384,12 +417,17 @@ export const supabaseRepo: Repo = {
               color: v.color,
               color_hex: v.colorHex,
               stock: v.stock,
-              price_override: v.priceOverride,
-            })),
-          ),
-      );
+                price_override: v.priceOverride,
+              })),
+            ),
+        );
+      }
+    } catch (e) {
+      // Yeni ürün yarım kalmasın: varyantlar kaydedilemediyse ürünü geri al
+      if (!input.id) await db().from("products").delete().eq("id", productId);
+      throw e;
     }
-    await audit(actorId, input.id ? "update" : "create", "product", input.slug);
+    await audit(actorId, input.id ? "update" : "create", "product", slug);
     return (await this.getProductById(productId))!;
   },
 

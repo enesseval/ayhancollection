@@ -21,8 +21,22 @@ async function guard<T>(fn: (actorId: string) => Promise<T>): Promise<T | AdminR
   } catch (e) {
     if (e instanceof AdminError) return { ok: false, error: e.message };
     console.error("[admin]", e);
-    return { ok: false, error: e instanceof Error ? e.message : "İşlem başarısız" };
+    return { ok: false, error: friendlyError(e) };
   }
+}
+
+/** Ham veritabanı hatalarını yöneticiye anlaşılır Türkçe mesaja çevirir */
+function friendlyError(e: unknown): string {
+  const msg = e instanceof Error ? e.message : "";
+  if (/products_slug_key/.test(msg)) return "Bu adres (URL) başka bir ürün tarafından kullanılıyor. Farklı bir adres yazın.";
+  if (/sku/i.test(msg) && /duplicate key/.test(msg)) return "Aynı SKU başka bir üründe kullanılıyor. SKU'yu değiştirip tekrar kaydedin.";
+  if (/coupons_code_key/.test(msg)) return "Bu kupon kodu zaten var.";
+  if (/duplicate key/.test(msg)) return "Bu kayıt zaten var.";
+  if (/violates foreign key/.test(msg)) return "Bu kayıt başka kayıtlarda (ör. siparişlerde) kullanıldığı için değiştirilemiyor.";
+  if (/violates check constraint/.test(msg)) return "Girilen değerlerden biri geçersiz. Lütfen formu kontrol edin.";
+  // Kendi fırlattığımız Türkçe mesajlar olduğu gibi gösterilir; ham İngilizce hata gösterilmez
+  if (msg && /[çğıöşüÇĞİÖŞÜ]/.test(msg)) return msg;
+  return "İşlem tamamlanamadı. Lütfen tekrar deneyin.";
 }
 
 function revalidateCatalog(slug?: string) {
@@ -49,7 +63,11 @@ export async function saveProduct(raw: unknown): Promise<AdminResult> {
       actor,
     );
     revalidateCatalog(saved.slug);
-    return { ok: true as const, message: "Ürün kaydedildi", id: saved.id };
+    return {
+      ok: true as const,
+      message: saved.slug !== d.slug ? `Ürün kaydedildi. Adres başka bir üründe kullanıldığı için "${saved.slug}" olarak ayarlandı.` : "Ürün kaydedildi",
+      id: saved.id,
+    };
   }) as Promise<AdminResult>;
 }
 
