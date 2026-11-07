@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { archiveProduct, saveProduct } from "@/app/actions/admin";
+import { archiveProduct, saveProduct, type AdminResult } from "@/app/actions/admin";
 import { slugify } from "@/lib/format";
 import { MarkdownField } from "./markdown-field";
+import { PendingImages } from "./pending-images";
+import { uploadProductImage } from "./media-manager";
 import { VariantTable, useVariantRows, type VariantRow } from "./variant-table";
 import type { Category, Product, SizeChart } from "@/lib/types";
 import { Flash, useAdminAction } from "./order-actions";
@@ -23,13 +25,16 @@ export function ProductEditor({ product, categories, sizeCharts }: { product: Pr
     [product],
   );
   const vt = useVariantRows(initialRows, skuBase);
+  // Yeni ürün: kaydetmeden önce seçilen görseller
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [uploadNote, setUploadNote] = useState<string | null>(null);
   const [variantError, setVariantError] = useState<string | null>(null);
 
   // Kaydedilmemiş değişiklik takibi: form alanları + varyant seçimi
   const [formDirty, setFormDirty] = useState(false);
   const variantSig = JSON.stringify(vt.rows.map((r) => [r.color, r.colorHex, r.size, r.stock, r.priceOverride, r.sku]));
   const [savedSig, setSavedSig] = useState(variantSig);
-  const dirty = formDirty || variantSig !== savedSig;
+  const dirty = formDirty || variantSig !== savedSig || pendingFiles.length > 0;
   useUnsavedGuard(dirty);
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -77,6 +82,27 @@ export function ProductEditor({ product, categories, sizeCharts }: { product: Pr
       })),
     };
     run(async () => {
+      // Yeni ürün + seçili görseller: önce taslak oluştur, görselleri yükle, sonra istenen durumu uygula
+      if (!product && pendingFiles.length) {
+        const wanted = payload.status;
+        const first = await saveProduct({ ...payload, status: "draft" });
+        if (!first.ok || !first.id) return first;
+        const errors: string[] = [];
+        for (let i = 0; i < pendingFiles.length; i++) {
+          setUploadNote(`Görseller yükleniyor ${i + 1}/${pendingFiles.length}…`);
+          const err = await uploadProductImage(first.id, pendingFiles[i]);
+          if (err) errors.push(err);
+        }
+        setUploadNote(null);
+        let res: AdminResult = first;
+        if (wanted !== "draft") res = await saveProduct({ ...payload, id: first.id, status: wanted });
+        setFormDirty(false);
+        setSavedSig(variantSig);
+        setPendingFiles([]);
+        router.replace(`/yonetim/urunler/${first.id}`);
+        if (errors.length) return { ok: false as const, error: `Ürün kaydedildi ama bazı görseller yüklenemedi: ${errors.join("; ")}` };
+        return res.ok ? { ok: true as const, message: "Ürün ve görseller kaydedildi" } : { ok: false as const, error: `Ürün taslak olarak kaydedildi. ${res.error}` };
+      }
       const res = await saveProduct(payload);
       if (res.ok) {
         setFormDirty(false);
@@ -94,6 +120,11 @@ export function ProductEditor({ product, categories, sizeCharts }: { product: Pr
       onChange={() => setFormDirty(true)}
       className="grid gap-6 pb-4 xl:grid-cols-[1.4fr_1fr]"
     >
+      {!product && (
+        <div className="xl:col-span-2">
+          <PendingImages files={pendingFiles} onChange={setPendingFiles} />
+        </div>
+      )}
       <div className="card space-y-4 p-5">
         <div>
           <label className="label" htmlFor="name">Ürün adı</label>
@@ -201,7 +232,9 @@ export function ProductEditor({ product, categories, sizeCharts }: { product: Pr
       <div className="sticky bottom-0 z-20 -mx-4 border-t border-line bg-white/95 px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 xl:col-span-2">
         <div className="flex flex-wrap items-center gap-3">
           <div className="min-w-0 flex-1 text-sm">
-            {pending ? (
+            {uploadNote ? (
+              <span className="text-muted">{uploadNote}</span>
+            ) : pending ? (
               <span className="text-muted">Kaydediliyor…</span>
             ) : dirty ? (
               <span className="flex items-center gap-2 font-medium text-rose">

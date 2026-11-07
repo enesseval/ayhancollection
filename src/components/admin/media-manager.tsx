@@ -11,7 +11,7 @@ import type { Media } from "@/lib/types";
  * JPEG %85 kaliteye indirir (~0,5-1 MB). Böylece Vercel'in 4,5 MB gövde limitine takılmaz,
  * yükleme mobil veride hızlı olur. Asıl WebP boyutları sunucuda üretilir.
  */
-async function compress(file: File): Promise<Blob> {
+export async function compress(file: File): Promise<Blob> {
   try {
     const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
     const scale = Math.min(1, 2000 / Math.max(bmp.width, bmp.height));
@@ -28,6 +28,21 @@ async function compress(file: File): Promise<Blob> {
   }
 }
 
+/** Tek görseli sıkıştırıp ürüne yükler; hata varsa mesajını döndürür */
+export async function uploadProductImage(productId: string, file: File, opts: { color?: string; focalY?: string } = {}): Promise<string | null> {
+  const blob = await compress(file);
+  if (blob.size > 4 * 1024 * 1024) return `${file.name}: dosya sıkıştırıldıktan sonra da 4 MB'tan büyük`;
+  const fd = new FormData();
+  fd.append("file", new File([blob], "upload.jpg", { type: blob.type || "image/jpeg" }));
+  fd.append("productId", productId);
+  fd.append("color", opts.color ?? "");
+  fd.append("focalY", opts.focalY ?? "0.4");
+  const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+  if (res.ok) return null;
+  const j = (await res.json().catch(() => ({}))) as { error?: string };
+  return j.error ?? "Yükleme başarısız";
+}
+
 export function MediaManager({ productId, productName, media, colors }: { productId: string; productName: string; media: Media[]; colors: string[] }) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
@@ -42,21 +57,8 @@ export function MediaManager({ productId, productName, media, colors }: { produc
     const list = Array.from(files).slice(0, 12 - media.length);
     for (let i = 0; i < list.length; i++) {
       setBusy(`Yükleniyor ${i + 1}/${list.length}…`);
-      const blob = await compress(list[i]);
-      if (blob.size > 4 * 1024 * 1024) {
-        setError(`${list[i].name}: dosya sıkıştırıldıktan sonra da 4 MB'tan büyük`);
-        continue;
-      }
-      const fd = new FormData();
-      fd.append("file", new File([blob], "upload.jpg", { type: blob.type || "image/jpeg" }));
-      fd.append("productId", productId);
-      fd.append("color", color);
-      fd.append("focalY", focus);
-      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-      if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as { error?: string };
-        setError(j.error ?? "Yükleme başarısız");
-      }
+      const err = await uploadProductImage(productId, list[i], { color, focalY: focus });
+      if (err) setError(err);
     }
     setBusy(null);
     if (input.current) input.current.value = "";
