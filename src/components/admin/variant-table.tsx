@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, Plus, Trash2, Wand2 } from "lucide-react";
 import { PALETTE, colorHexFor, colorKey } from "@/lib/colors";
 
@@ -154,7 +154,7 @@ export function VariantTable({ vt }: { vt: ReturnType<typeof useVariantRows> }) 
               {o.name}
             </label>
           ))}
-          <button type="button" onClick={() => setNewColor({ row: -1, name: "", hex: "#888888" })} className="flex w-full items-center gap-2 border-t border-line px-3 py-2 text-left text-sm font-medium">
+          <button type="button" onClick={(e) => { e.currentTarget.closest("details")?.removeAttribute("open"); setNewColor({ row: -1, name: "", hex: "#888888" }); }} className="flex w-full items-center gap-2 border-t border-line px-3 py-2 text-left text-sm font-medium">
             <Plus className="h-4 w-4" /> Yeni renk ekle…
           </button>
         </CheckDropdown>
@@ -172,7 +172,7 @@ export function VariantTable({ vt }: { vt: ReturnType<typeof useVariantRows> }) 
               </div>
             </div>
           ))}
-          <button type="button" onClick={() => setNewSize({ row: -1, value: "" })} className="mt-1 flex w-full items-center gap-2 border-t border-line px-3 py-2 text-left text-sm font-medium">
+          <button type="button" onClick={(e) => { e.currentTarget.closest("details")?.removeAttribute("open"); setNewSize({ row: -1, value: "" }); }} className="mt-1 flex w-full items-center gap-2 border-t border-line px-3 py-2 text-left text-sm font-medium">
             <Plus className="h-4 w-4" /> Diğer beden ekle…
           </button>
         </CheckDropdown>
@@ -304,12 +304,28 @@ export function VariantTable({ vt }: { vt: ReturnType<typeof useVariantRows> }) 
   );
 }
 
-/** Açılır onay kutusu listesi (çoklu seçim) */
+/** Açılır onay kutusu listesi (çoklu seçim). Dışarı tıklayınca veya Esc ile kapanır. */
 function CheckDropdown({ label, summary, children }: { label: string; summary: string; children: React.ReactNode }) {
+  const ref = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const close = (e: Event) => {
+      const el = ref.current;
+      if (!el?.open) return;
+      if (e instanceof KeyboardEvent ? e.key === "Escape" : !el.contains(e.target as Node)) el.open = false;
+    };
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("focusin", close);
+    document.addEventListener("keydown", close);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("focusin", close);
+      document.removeEventListener("keydown", close);
+    };
+  }, []);
   return (
     <div>
       <p className="label">{label}</p>
-      <details className="group relative">
+      <details ref={ref} className="group relative">
         <summary className="input flex cursor-pointer list-none items-center justify-between gap-2 !py-2">
           <span className="truncate">{summary}</span>
           <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
