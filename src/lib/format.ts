@@ -65,3 +65,11 @@ export function waLink(phone: string, text: string) {
 }
 
 export const CONTRACT_VERSION = "2026-11-04";
+
+/** İlk harfi Türkçe kurallarıyla büyütür ("omuzu" → "Omuzu", "iç" → "İç"); geri kalanına dokunmaz */
+export function capitalizeFirst(s: string): string {
+  const t = s.trimStart();
+  if (!t) return s;
+  const first = String.fromCodePoint(t.codePointAt(0)!);
+  return first.toLocaleUpperCase("tr-TR") + t.slice(first.length);
+}

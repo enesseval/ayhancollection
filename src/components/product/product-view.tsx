@@ -11,6 +11,8 @@ type Props = {
   placeholders: Record<string, string | undefined>;
   whatsapp: string;
   sizeChart: "tesettur" | "pijama" | "esarp" | "erkek";
+  /** Sunucuda işlenmiş (Markdown) detay bölümleri */
+  details: { title: string; body: React.ReactNode; filled: boolean }[];
 };
 
 const SIZE_CHARTS: Record<Props["sizeChart"], { head: string[]; rows: string[][]; note: string }> = {
@@ -51,7 +53,7 @@ const SIZE_CHARTS: Record<Props["sizeChart"], { head: string[]; rows: string[][]
   esarp: { head: ["Ölçü"], rows: [["Ürün açıklamasındaki ölçüleri inceleyin"]], note: "" },
 };
 
-export function ProductView({ product, placeholders, whatsapp, sizeChart }: Props) {
+export function ProductView({ product, placeholders, whatsapp, sizeChart, details }: Props) {
   const colors = useMemo(
     () => [...new Map(product.variants.map((v) => [v.color, v.colorHex])).entries()].map(([name, hex]) => ({ name, hex })),
     [product.variants],
@@ -164,7 +166,6 @@ export function ProductView({ product, placeholders, whatsapp, sizeChart }: Prop
             </>
           )}
         </div>
-        <p className="mt-1 text-xs text-muted">KDV dahil</p>
 
         <div className="mt-6">
           <p className="mb-2 text-sm">
@@ -263,23 +264,17 @@ export function ProductView({ product, placeholders, whatsapp, sizeChart }: Prop
         </a>
 
         <div className="mt-8 divide-y divide-line border-y border-line">
-          {[
-            ["Ürün açıklaması", product.description],
-            ["Kumaş ve ölçüler", product.fabric],
-            ["Bakım", product.care],
-            [
-              "Kargo ve iade",
-              "Siparişleriniz 1-3 iş günü içinde kargoya verilir. 1.500 TL ve üzeri siparişlerde kargo ücretsizdir. Teslimattan itibaren 14 gün içinde iade edebilirsiniz.",
-            ],
-          ].map(([t, body], i) => (
-            <details key={t} className="group py-4" open={i === 0}>
-              <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium">
-                {t}
-                <Plus className="h-4 w-4 transition-transform group-open:rotate-45" />
-              </summary>
-              <p className="mt-3 text-sm leading-6 text-ink-soft">{body}</p>
-            </details>
-          ))}
+          {details
+            .filter((d) => d.filled)
+            .map((d, i) => (
+              <details key={d.title} className="group py-4" open={i < 2}>
+                <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium">
+                  {d.title}
+                  <Plus className="h-4 w-4 transition-transform group-open:rotate-45" />
+                </summary>
+                <div className="mt-3">{d.body}</div>
+              </details>
+            ))}
         </div>
       </div>
 

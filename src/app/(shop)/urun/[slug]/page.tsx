@@ -3,10 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { repo } from "@/lib/data";
 import { env } from "@/lib/env";
-import { mediaUrl } from "@/lib/format";
+import { formatTRY, mediaUrl } from "@/lib/format";
 import { ProductView } from "@/components/product/product-view";
 import { ProductCard } from "@/components/product/product-card";
 import { thumbDataUrl } from "@/components/product/product-image";
+import { Markdown, markdownToPlain } from "@/components/markdown";
 
 export const revalidate = 300;
 
@@ -24,9 +25,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const img = p.media[0] ? mediaUrl(p.media[0].key, 960) : undefined;
   return {
     title: p.name,
-    description: p.description.slice(0, 155),
+    description: markdownToPlain(p.description).slice(0, 155),
     alternates: { canonical: `/urun/${p.slug}` },
-    openGraph: { title: p.name, description: p.description.slice(0, 155), images: img ? [{ url: img, width: 960, height: 1200 }] : [] },
+    openGraph: { title: p.name, description: markdownToPlain(p.description).slice(0, 155), images: img ? [{ url: img, width: 960, height: 1200 }] : [] },
   };
 }
 
@@ -49,7 +50,7 @@ export default async function ProductPage({ params }: Props) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.description,
+    description: markdownToPlain(product.description),
     sku: product.variants[0]?.sku,
     brand: { "@type": "Brand", name: "Ayşe Ayhan Collection" },
     image: product.media.map((m) => new URL(mediaUrl(m.key, 960), env.siteUrl).toString()),
@@ -93,7 +94,27 @@ export default async function ProductPage({ params }: Props) {
           </>
         )}
       </nav>
-      <ProductView product={product} placeholders={placeholders} whatsapp={settings.whatsapp} sizeChart={sizeChart} />
+      <ProductView
+        product={product}
+        placeholders={placeholders}
+        whatsapp={settings.whatsapp}
+        sizeChart={sizeChart}
+        // Metinler sunucuda Markdown'dan işlenir; istemciye Markdown kütüphanesi gitmez
+        details={[
+          { title: "Ürün açıklaması", body: <Markdown>{product.description}</Markdown> , filled: !!product.description.trim() },
+          { title: "Kumaş ve ölçüler", body: <Markdown>{product.fabric}</Markdown>, filled: !!product.fabric.trim() },
+          { title: "Bakım", body: <Markdown>{product.care}</Markdown>, filled: !!product.care.trim() },
+          {
+            title: "Kargo ve iade",
+            body: (
+              <Markdown>
+                {`Siparişleriniz **1-3 iş günü** içinde kargoya verilir. ${formatTRY(settings.freeShippingThreshold)} ve üzeri siparişlerde kargo **ücretsizdir**. Teslimattan itibaren **14 gün** içinde iade edebilirsiniz.`}
+              </Markdown>
+            ),
+            filled: true,
+          },
+        ]}
+      />
 
       {related.length > 0 && (
         <section className="mt-20">

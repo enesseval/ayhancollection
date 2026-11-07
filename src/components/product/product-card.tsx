@@ -2,6 +2,7 @@ import Link from "next/link";
 import { formatTRY } from "@/lib/format";
 import type { Product } from "@/lib/types";
 import { ProductImage } from "./product-image";
+import { CardCarousel } from "./card-carousel";
 
 export function ProductCard({ product, preload = false }: { product: Product; preload?: boolean }) {
   const totalStock = product.variants.reduce((a, v) => a + v.stock, 0);
@@ -10,16 +11,20 @@ export function ProductCard({ product, preload = false }: { product: Product; pr
     product.compareAtPrice && product.compareAtPrice > product.basePrice
       ? Math.round((1 - product.basePrice / product.compareAtPrice) * 100)
       : 0;
-  const second = product.media[1];
+  // Kartta en fazla 5 görsel (bant genişliği); ilki öne yüklenebilir, diğerleri tembel
+  const images = product.media.slice(0, 5);
   return (
     <article className="group relative">
       <Link href={`/urun/${product.slug}`} className="block" aria-label={product.name}>
         <div className="relative overflow-hidden bg-sand">
-          <ProductImage media={product.media[0]} sizes="(max-width: 768px) 50vw, 25vw" preload={preload} />
-          {second && (
-            <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 max-md:hidden">
-              <ProductImage media={second} sizes="25vw" />
-            </div>
+          {images.length > 1 ? (
+            <CardCarousel label={product.name} raiseDots={totalStock <= 5}>
+              {images.map((m, i) => (
+                <ProductImage key={m.key} media={m} sizes="(max-width: 768px) 50vw, 25vw" preload={preload && i === 0} />
+              ))}
+            </CardCarousel>
+          ) : (
+            <ProductImage media={images[0]} sizes="(max-width: 768px) 50vw, 25vw" preload={preload} />
           )}
           <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
             {product.isNew && <span className="bg-white/95 px-2 py-0.5 text-[11px] font-medium tracking-wide">YENİ</span>}

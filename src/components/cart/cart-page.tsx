@@ -82,7 +82,6 @@ export function Summary({
           <dt>Toplam</dt>
           <dd>{priced ? formatTRY(priced.total) : "…"}</dd>
         </div>
-        <p className="text-xs text-muted">KDV dahildir.</p>
       </dl>
     </div>
   );

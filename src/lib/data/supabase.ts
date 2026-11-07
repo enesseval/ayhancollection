@@ -2,6 +2,7 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { env } from "../env";
+import { capitalizeFirst } from "../format";
 import type { Category, Coupon, DashboardStats, Media, Order, OrderStatus, Product, Settings, Variant } from "../types";
 import { StockError, type Repo } from "./repo";
 import { filterProducts, newOrderNo } from "./shared";
@@ -43,7 +44,7 @@ function mapProduct(r: any): Product {
   return {
     id: r.id,
     slug: r.slug,
-    name: r.name,
+    name: capitalizeFirst(r.name),
     description: r.description,
     fabric: r.fabric,
     care: r.care,
@@ -80,7 +81,7 @@ function mapOrder(r: any): Order {
     items: (r.order_items ?? []).map((i: any) => ({
       variantId: i.variant_id,
       productId: i.product_id,
-      productName: i.product_name,
+      productName: capitalizeFirst(i.product_name),
       productSlug: i.product_slug,
       sku: i.sku,
       size: i.size,
@@ -530,7 +531,7 @@ export const supabaseRepo: Repo = {
       monthRevenue: paid.filter((o) => istDay(o.created_at).startsWith(today.slice(0, 7))).reduce((a, o) => a + o.total, 0),
       awaitingTransfer: (check(await db().from("orders").select("id").eq("status", "awaiting_transfer")) as any[]).length,
       toPrepare: (check(await db().from("orders").select("id").eq("status", "paid")) as any[]).length,
-      lowStock: low.map((v) => ({ productName: v.products.name, sku: v.sku, size: v.size, color: v.color, stock: v.stock })),
+      lowStock: low.map((v) => ({ productName: capitalizeFirst(v.products.name), sku: v.sku, size: v.size, color: v.color, stock: v.stock })),
     };
   },
 

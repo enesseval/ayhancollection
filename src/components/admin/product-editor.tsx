@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Plus, Trash2, Wand2 } from "lucide-react";
 import { archiveProduct, saveProduct } from "@/app/actions/admin";
 import { slugify } from "@/lib/format";
+import { MarkdownField } from "./markdown-field";
 import type { Category, Product } from "@/lib/types";
 import { Flash, useAdminAction } from "./order-actions";
 
@@ -106,20 +107,16 @@ export function ProductEditor({ product, categories }: { product: Product | null
             <input id="slug" className="input" value={slug} onChange={(e) => { setSlug(e.target.value); setSlugTouched(true); }} pattern="[a-z0-9-]{2,80}" />
           </div>
         </div>
-        <div>
-          <label className="label" htmlFor="description">Açıklama</label>
-          <textarea id="description" name="description" rows={4} className="input" defaultValue={product?.description} />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="label" htmlFor="fabric">Kumaş ve ölçüler</label>
-            <textarea id="fabric" name="fabric" rows={3} className="input" defaultValue={product?.fabric} placeholder="%100 Viskon. Model 1,72 m, 38 beden giyiyor." />
-          </div>
-          <div>
-            <label className="label" htmlFor="care">Bakım</label>
-            <textarea id="care" name="care" rows={3} className="input" defaultValue={product?.care ?? "30°C'de tersten yıkayın."} />
-          </div>
-        </div>
+        <MarkdownField name="description" label="Açıklama" rows={5} defaultValue={product?.description} placeholder="Ürünü birkaç cümleyle anlatın." />
+        <MarkdownField
+          name="fabric"
+          label="Kumaş ve ölçüler"
+          rows={6}
+          defaultValue={product?.fabric}
+          sizes={[...new Set(rows.map((r) => r.size).filter(Boolean))]}
+          placeholder={"**Kumaş:** %100 Viskon\n\nÖlçü tablosu için tablo butonuna basın."}
+        />
+        <MarkdownField name="care" label="Bakım" rows={3} defaultValue={product?.care ?? "30°C'de tersten yıkayın."} />
       </div>
 
       <div className="card h-fit space-y-4 p-5">

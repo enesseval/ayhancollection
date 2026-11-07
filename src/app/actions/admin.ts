@@ -11,6 +11,7 @@ import { sendOrderUpdate } from "@/lib/email";
 const MAIL_NOTE = () => (features.resend ? ", müşteriye e-posta gönderildi" : " (e-posta servisi bağlanınca müşteriye otomatik gidecek)");
 import type { OrderStatus, Settings } from "@/lib/types";
 import { z } from "zod";
+import { capitalizeFirst } from "@/lib/format";
 
 export type AdminResult = { ok: true; message?: string; id?: string } | { ok: false; error: string };
 
@@ -57,6 +58,7 @@ export async function saveProduct(raw: unknown): Promise<AdminResult> {
     const saved = await repo.upsertProduct(
       {
         ...d,
+        name: capitalizeFirst(d.name),
         id: d.id || undefined,
         variants: d.variants.map((v) => ({ ...v, id: v.id || "", sku: v.sku.toUpperCase() })),
       },
