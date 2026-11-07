@@ -1,0 +1,311 @@
+{
+ "desktop /": [
+  {
+   "id": "region",
+   "impact": "moderate",
+   "help": "All page content should be contained by landmarks",
+   "n": 1,
+   "targets": [
+    ".text-\\[12px\\].bg-blush-soft.px-4"
+   ]
+  }
+ ],
+ "desktop /kategori/tesettur-giyim": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 1,
+   "targets": [
+    ".mt-3.space-y-1[href$=\"qa-iptal-q3kt\"] > h3"
+   ]
+  },
+  {
+   "id": "region",
+   "impact": "moderate",
+   "help": "All page content should be contained by landmarks",
+   "n": 1,
+   "targets": [
+    ".bg-blush-soft"
+   ]
+  }
+ ],
+ "desktop /urun/vizon-uzun-tunik": [
+  {
+   "id": "region",
+   "impact": "moderate",
+   "help": "All page content should be contained by landmarks",
+   "n": 1,
+   "targets": [
+    ".bg-blush-soft"
+   ]
+  }
+ ],
+ "desktop /sepet": [
+  {
+   "id": "region",
+   "impact": "moderate",
+   "help": "All page content should be contained by landmarks",
+   "n": 1,
+   "targets": [
+    ".bg-blush-soft"
+   ]
+  }
+ ],
+ "desktop /odeme": [
+  {
+   "id": "region",
+   "impact": "moderate",
+   "help": "All page content should be contained by landmarks",
+   "n": 1,
+   "targets": [
+    ".bg-blush-soft"
+   ]
+  }
+ ],
+ "desktop /hesabim": [
+  {
+   "id": "region",
+   "impact": "moderate",
+   "help": "All page content should be contained by landmarks",
+   "n": 1,
+   "targets": [
+    ".py-1\\.5"
+   ]
+  }
+ ],
+ "desktop /siparis-takip": [
+  {
+   "id": "region",
+   "impact": "moderate",
+   "help": "All page content should be contained by landmarks",
+   "n": 1,
+   "targets": [
+    ".bg-blush-soft"
+   ]
+  }
+ ],
+ "desktop /arama?q=tunik": [
+  {
+   "id": "heading-order",
+   "impact": "moderate",
+   "help": "Heading levels should only increase by one",
+   "n": 1,
+   "targets": [
+    ".mt-3.space-y-1[href$=\"murdum-dalga-desen-takim\"] > h3"
+   ]
+  },
+  {
+   "id": "region",
+   "impact": "moderate",
+   "help": "All page content should be contained by landmarks",
+   "n": 1,
+   "targets": [
+    ".bg-blush-soft"
+   ]
+  }
+ ],
+ "desktop /sss": [
+  {
+   "id": "region",
+   "impact": "moderate",
+   "help": "All page content should be contained by landmarks",
+   "n": 1,
+   "targets": [
+    ".bg-blush-soft"
+   ]
+  }
+ ],
+ "desktop /iletisim": [
+  {
+   "id": "region",
+   "impact": "moderate",
+   "help": "All page content should be contained by landmarks",
+   "n": 1,
+   "targets": [
+    ".bg-blush-soft"
+   ]
+  }
+ ],
+ "desktop /yonetim": [
+  {
+   "id": "landmark-one-main",
+   "impact": "moderate",
+   "help": "Document should have one main landmark",
+   "n": 1,
+   "targets": [
+    "html"
+   ]
+  },
+  {
+   "id": "region",
+   "impact": "moderate",
+   "help": "All page content should be contained by landmarks",
+   "n": 1,
+   "targets": [
+    ".bg-\\[\\#F5F2EE\\] > .min-w-0"
+   ]
+  }
+ ],
+ "desktop /yonetim/siparisler": [
+  {
+   "id": "landmark-one-main",
+   "impact": "moderate",
+   "help": "Document should have one main landmark",
+   "n": 1,
+   "targets": [
+    "html"
+   ]
+  },
+  {
+   "id": "region",
+   "impact": "moderate",
+   "help": "All page content should be contained by landmarks",
+   "n": 1,
+   "targets": [
+    ".min-w-0"
+   ]
+  }
+ ],
+ "desktop /yonetim/urunler": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "help": "Elements must meet minimum color contrast ratio thresholds",
+   "n": 26,
+   "targets": [
+    "tr:nth-child(5) > .px-4:nth-child(6) > .bg-success\\/10.text-success.py-0\\.5",
+    "tr:nth-child(6) > .px-4:nth-child(6) > .bg-success\\/10.text-success.py-0\\.5",
+    "tr:nth-child(7) > .px-4:nth-child(6) > .bg-success\\/10.text-success.py-0\\.5"
+   ]
+  },
+  {
+   "id": "landmark-one-main",
+   "impact": "moderate",
+   "help": "Document should have one main landmark",
+   "n": 1,
+   "targets": [
+    "html"
+   ]
+  },
+  {
+   "id": "region",
+   "impact": "moderate",
+   "help": "All page content should be contained by landmarks",
+   "n": 245,
+   "targets": [
+    ".border-blush",
+    ".justify-between.flex-wrap.gap-3",
+    ".no-scrollbar.overflow-x-auto.border-b"
+   ]
+  }
+ ],
+ "desktop /yonetim/urunler/yeni": [
+  {
+   "id": "empty-table-header",
+   "impact": "minor",
+   "help": "Table header text should not be empty",
+   "n": 1,
+   "targets": [
+    "th:nth-child(7)"
+   ]
+  },
+  {
+   "id": "landmark-one-main",
+   "impact": "moderate",
+   "help": "Document should have one main landmark",
+   "n": 1,
+   "targets": [
+    "html"
+   ]
+  },
+  {
+   "id": "region",
+   "impact": "moderate",
+   "help": "All page content should be contained by landmarks",
+   "n": 24,
+   "targets": [
+    ".border-blush",
+    ".space-y-6 > a[href$=\"urunler\"]",
+    ".space-y-6 > .gap-3.justify-between.flex-wrap"
+   ]
+  }
+ ],
+ "desktop /yonetim/kategoriler": [
+  {
+   "id": "landmark-one-main",
+   "impact": "moderate",
+   "help": "Document should have one main landmark",
+   "n": 1,
+   "targets": [
+    "html"
+   ]
+  },
+  {
+   "id": "region",
+   "impact": "moderate",
+   "help": "All page content should be contained by landmarks",
+   "n": 17,
+   "targets": [
+    ".border-blush",
+    ".space-y-6 > div:nth-child(1)",
+    ".justify-between.py-2\\.5.px-3 > .font-semibold.text-sm"
+   ]
+  }
+ ],
+ "desktop /yonetim/kuponlar": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "help": "Elements must meet minimum color contrast ratio thresholds",
+   "n": 6,
+   "targets": [
+    "tr:nth-child(1) > td:nth-child(6) > .rounded-full.bg-success\\/10.text-success",
+    "tr:nth-child(2) > td:nth-child(6) > .rounded-full.bg-success\\/10.text-success",
+    "tr:nth-child(3) > td:nth-child(6) > .rounded-full.bg-success\\/10.text-success"
+   ]
+  },
+  {
+   "id": "landmark-one-main",
+   "impact": "moderate",
+   "help": "Document should have one main landmark",
+   "n": 1,
+   "targets": [
+    "html"
+   ]
+  },
+  {
+   "id": "region",
+   "impact": "moderate",
+   "help": "All page content should be contained by landmarks",
+   "n": 9,
+   "targets": [
+    ".border-blush",
+    "h1",
+    ".card.overflow-x-auto"
+   ]
+  }
+ ],
+ "desktop /yonetim/ayarlar": [
+  {
+   "id": "landmark-one-main",
+   "impact": "moderate",
+   "help": "Document should have one main landmark",
+   "n": 1,
+   "targets": [
+    "html"
+   ]
+  },
+  {
+   "id": "region",
+   "impact": "moderate",
+   "help": "All page content should be contained by landmarks",
+   "n": 10,
+   "targets": [
+    ".border-blush",
+    "h1",
+    ".h-fit > h2:nth-child(1)"
+   ]
+  }
+ ]
+}

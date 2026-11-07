@@ -1,0 +1,3 @@
+[ 1173205ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3200/olmayan-sayfa:0
+[ 1181695ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3200/urun/olmayan:0
+[ 1212550ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3200/kategori/olmayan:0
