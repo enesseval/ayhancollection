@@ -85,3 +85,40 @@ export function displayHex(name: string, hex: string): string {
   const guess = colorHexFor(name);
   return guess ?? hex;
 }
+
+/** Yönetimde hazır sunulan, tesettür / eşarp sektöründe sık kullanılan renkler */
+export const PALETTE: { name: string; hex: string }[] = [
+  { name: "Siyah", hex: "#141414" },
+  { name: "Beyaz", hex: "#F4F3EF" },
+  { name: "Ekru", hex: "#EDE6D6" },
+  { name: "Krem", hex: "#E8E1D6" },
+  { name: "Bej", hex: "#C9B79C" },
+  { name: "Taş", hex: "#B9AE9C" },
+  { name: "Vizon", hex: "#8A7D72" },
+  { name: "Camel", hex: "#B5885A" },
+  { name: "Taba", hex: "#9C5B2E" },
+  { name: "Kahve", hex: "#6B4A33" },
+  { name: "Haki", hex: "#59563A" },
+  { name: "Haki yeşil", hex: "#4B5320" },
+  { name: "Zümrüt", hex: "#1F6B5C" },
+  { name: "Mint", hex: "#A9CDB7" },
+  { name: "Lacivert", hex: "#1F2A44" },
+  { name: "İndigo", hex: "#3B4A8F" },
+  { name: "Saks mavi", hex: "#2F5DA8" },
+  { name: "Bebe mavi", hex: "#A9C8E8" },
+  { name: "Gri", hex: "#8A8D91" },
+  { name: "Antrasit", hex: "#2E3135" },
+  { name: "Füme", hex: "#4B4F54" },
+  { name: "Bordo", hex: "#6E2430" },
+  { name: "Kırmızı", hex: "#C62828" },
+  { name: "Mürdüm", hex: "#5A2A3F" },
+  { name: "Gül kurusu", hex: "#C08081" },
+  { name: "Pudra", hex: "#E7C3C4" },
+  { name: "Lila", hex: "#B9A3D0" },
+  { name: "Hardal", hex: "#C9A227" },
+];
+
+/** Renk adlarını karşılaştırmak için (büyük/küçük harf ve boşluk farkını yok sayar) */
+export function colorKey(name: string): string {
+  return name.trim().toLocaleLowerCase("tr-TR").replace(/\s+/g, " ");
+}
