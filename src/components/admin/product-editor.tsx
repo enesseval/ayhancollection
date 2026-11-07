@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { archiveProduct, saveProduct } from "@/app/actions/admin";
 import { slugify } from "@/lib/format";
 import { MarkdownField } from "./markdown-field";
-import { VariantBuilder, useVariantBuilder, type VariantRow } from "./variant-builder";
+import { VariantTable, useVariantRows, type VariantRow } from "./variant-table";
 import type { Category, Product, SizeChart } from "@/lib/types";
 import { Flash, useAdminAction } from "./order-actions";
 
@@ -22,29 +22,29 @@ export function ProductEditor({ product, categories, sizeCharts }: { product: Pr
     () => product?.variants.map((v) => ({ ...v, priceOverride: tl(v.priceOverride) })) ?? [],
     [product],
   );
-  const vb = useVariantBuilder(initialRows, skuBase);
+  const vt = useVariantRows(initialRows, skuBase);
   const [variantError, setVariantError] = useState<string | null>(null);
 
   // Kaydedilmemiş değişiklik takibi: form alanları + varyant seçimi
   const [formDirty, setFormDirty] = useState(false);
-  const variantSig = JSON.stringify(vb.rows.map((r) => [r.color, r.colorHex, r.size, r.stock, r.priceOverride, r.sku]));
+  const variantSig = JSON.stringify(vt.rows.map((r) => [r.color, r.colorHex, r.size, r.stock, r.priceOverride, r.sku]));
   const [savedSig, setSavedSig] = useState(variantSig);
   const dirty = formDirty || variantSig !== savedSig;
   useUnsavedGuard(dirty);
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Renk ve beden seçimi zorunlu
-    if (vb.colors.length === 0 || vb.sizes.length === 0 || vb.rows.length === 0 || vb.colorWithoutSize) {
-      setVariantError(
-        vb.colors.length === 0
-          ? "En az bir renk seçin."
-          : vb.sizes.length === 0
-            ? "En az bir beden seçin."
-            : vb.rows.length === 0
-              ? "“Matris oluştur”a basıp stokları girin."
-              : `${vb.colorWithoutSize} renginde hiç beden yok: matriste en az bir hücreye stok yazın ya da rengi kaldırın.`,
-      );
+    // Her satırda renk ve beden seçimi zorunlu
+    const problem =
+      vt.rows.length === 0
+        ? "En az bir varyant ekleyin (renk + beden)."
+        : vt.incomplete >= 0
+          ? `${vt.incomplete + 1}. satırda renk ve beden seçilmeli.`
+          : vt.duplicate
+            ? `${vt.duplicate} iki kez eklenmiş; birini silin.`
+            : null;
+    if (problem) {
+      setVariantError(problem);
       document.getElementById("varyantlar")?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
@@ -66,9 +66,9 @@ export function ProductEditor({ product, categories, sizeCharts }: { product: Pr
       isNew: f.get("isNew") === "on",
       isBestseller: f.get("isBestseller") === "on",
       sizeChartId: String(f.get("sizeChartId") ?? "") || null,
-      variants: vb.rows.map((r) => ({
+      variants: vt.rows.map((r, i) => ({
         id: r.id,
-        sku: r.sku,
+        sku: r.sku.trim() || vt.autoSku(r.color, r.size, i),
         size: r.size,
         color: r.color,
         colorHex: r.colorHex,
@@ -128,7 +128,7 @@ export function ProductEditor({ product, categories, sizeCharts }: { product: Pr
           label="Ölçüler"
           rows={6}
           defaultValue={product?.measurements}
-          sizes={vb.allSizes}
+          sizes={vt.allSizes}
           placeholder={"Ölçü tablosu için tablo butonuna basın; seçtiğiniz bedenler tabloya otomatik gelir.\nÖrn. Model 1,72 m ve 38 beden giyiyor."}
         />
         <MarkdownField name="care" label="Bakım" rows={3} defaultValue={product?.care ?? "30°C'de tersten yıkayın."} />
@@ -192,8 +192,8 @@ export function ProductEditor({ product, categories, sizeCharts }: { product: Pr
       </div>
 
       <div id="varyantlar" className="card scroll-mt-24 space-y-4 p-5 xl:col-span-2">
-        <h2 className="font-sans text-sm font-semibold">Renk, beden ve stok</h2>
-        <VariantBuilder vb={vb} />
+        <h2 className="font-sans text-sm font-semibold">Varyantlar ve stok</h2>
+        <VariantTable vt={vt} />
         {variantError && <p className="field-error" role="alert">{variantError}</p>}
       </div>
 
