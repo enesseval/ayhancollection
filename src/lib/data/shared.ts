@@ -34,7 +34,7 @@ export function filterProducts(
   if (categoryIds) list = list.filter((p) => categoryIds.includes(p.categoryId));
   if (q.q) {
     const needle = trLower(q.q.trim());
-    list = list.filter((p) => trLower(`${p.name} ${p.description} ${p.fabric}`).includes(needle));
+    list = list.filter((p) => trLower(`${p.name} ${p.description} ${p.fabric} ${p.measurements}`).includes(needle));
   }
   if (q.size) list = list.filter((p) => p.variants.some((v) => v.size === q.size && v.stock > 0));
   if (q.color) list = list.filter((p) => p.variants.some((v) => trLower(v.color) === trLower(q.color!)));

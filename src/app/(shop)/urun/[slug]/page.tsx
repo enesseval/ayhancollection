@@ -103,7 +103,8 @@ export default async function ProductPage({ params }: Props) {
         // Metinler sunucuda Markdown'dan işlenir; istemciye Markdown kütüphanesi gitmez
         details={[
           { title: "Ürün açıklaması", body: <Markdown>{product.description}</Markdown> , filled: !!product.description.trim() },
-          { title: "Kumaş ve ölçüler", body: <Markdown>{product.fabric}</Markdown>, filled: !!product.fabric.trim() },
+          { title: "Kumaş", body: <Markdown>{product.fabric}</Markdown>, filled: !!product.fabric.trim() },
+          { title: "Ölçüler", body: <Markdown>{product.measurements}</Markdown>, filled: !!product.measurements.trim() },
           { title: "Bakım", body: <Markdown>{product.care}</Markdown>, filled: !!product.care.trim() },
           {
             title: "Kargo ve iade",

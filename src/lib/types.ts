@@ -40,6 +40,8 @@ export type Product = {
   name: string;
   description: string;
   fabric: string;
+  /** Ölçüler (Markdown; genelde tablo) — kumaştan ayrı */
+  measurements: string;
   care: string;
   categoryId: string;
   basePrice: number;

@@ -23,7 +23,7 @@ export function db(): SupabaseClient {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const PRODUCT_SELECT =
-  "id, slug, name, description, fabric, care, category_id, base_price, compare_at_price, status, is_new, is_bestseller, vat_rate, size_chart_id, created_at, product_media(storage_key, width, height, thumbhash, alt, color, sort), product_variants(id, product_id, sku, size, color, color_hex, stock, price_override)";
+  "id, slug, name, description, fabric, measurements, care, category_id, base_price, compare_at_price, status, is_new, is_bestseller, vat_rate, size_chart_id, created_at, product_media(storage_key, width, height, thumbhash, alt, color, sort), product_variants(id, product_id, sku, size, color, color_hex, stock, price_override)";
 
 function mapVariant(v: any): Variant {
   return {
@@ -48,6 +48,7 @@ function mapProduct(r: any): Product {
     name: capitalizeFirst(r.name),
     description: r.description,
     fabric: r.fabric,
+    measurements: r.measurements ?? "",
     care: r.care,
     categoryId: r.category_id,
     basePrice: r.base_price,
@@ -396,6 +397,7 @@ export const supabaseRepo: Repo = {
       name: input.name,
       description: input.description,
       fabric: input.fabric,
+      measurements: input.measurements,
       care: input.care,
       category_id: input.categoryId,
       base_price: input.basePrice,

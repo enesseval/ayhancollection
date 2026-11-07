@@ -40,6 +40,7 @@ export type ProductInput = {
   slug: string;
   description: string;
   fabric: string;
+  measurements: string;
   care: string;
   categoryId: string;
   basePrice: number;

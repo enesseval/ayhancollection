@@ -237,7 +237,7 @@ export function ProductView({ product, placeholders, whatsapp, sizeChart, detail
           {details
             .filter((d) => d.filled)
             .map((d, i) => (
-              <details key={d.title} className="group py-4" open={i < 2}>
+              <details key={d.title} className="group py-4" open={i < 3}>
                 <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium">
                   {d.title}
                   <Plus className="h-4 w-4 transition-transform group-open:rotate-45" />

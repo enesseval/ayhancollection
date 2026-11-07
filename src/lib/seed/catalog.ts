@@ -447,6 +447,7 @@ export const seedProducts: Product[] = productDefs.map((def, i) => {
     name: def.name,
     description: def.description,
     fabric: def.fabric,
+    measurements: "",
     care: def.care,
     categoryId: cat.id,
     basePrice: def.price * 100,

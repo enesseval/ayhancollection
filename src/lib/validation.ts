@@ -78,6 +78,7 @@ export const productFormSchema = z.object({
     .regex(/^[a-z0-9-]{2,80}$/, "Adres yalnız küçük harf, rakam ve tire içerebilir"),
   description: z.string().trim().max(4000),
   fabric: z.string().trim().max(500),
+  measurements: z.string().trim().max(4000),
   care: z.string().trim().max(500),
   categoryId: z.string().uuid("Kategori seçin"),
   basePrice: z.number().int().min(100, "Fiyat en az 1 TL olmalı").max(100_000_00),

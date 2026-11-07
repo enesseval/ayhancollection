@@ -49,6 +49,7 @@ export function ProductEditor({ product, categories, sizeCharts }: { product: Pr
       slug: slug || slugify(name),
       description: String(f.get("description") ?? ""),
       fabric: String(f.get("fabric") ?? ""),
+      measurements: String(f.get("measurements") ?? ""),
       care: String(f.get("care") ?? ""),
       categoryId: String(f.get("categoryId") ?? ""),
       basePrice: kurus(String(f.get("basePrice") ?? "0")),
@@ -109,11 +110,18 @@ export function ProductEditor({ product, categories, sizeCharts }: { product: Pr
         <MarkdownField name="description" label="Açıklama" rows={5} defaultValue={product?.description} placeholder="Ürünü birkaç cümleyle anlatın." />
         <MarkdownField
           name="fabric"
-          label="Kumaş ve ölçüler"
-          rows={6}
+          label="Kumaş"
+          rows={2}
           defaultValue={product?.fabric}
+          placeholder="Örn. %100 Viskon, dökümlü ve terletmez"
+        />
+        <MarkdownField
+          name="measurements"
+          label="Ölçüler"
+          rows={6}
+          defaultValue={product?.measurements}
           sizes={vb.allSizes}
-          placeholder={"**Kumaş:** %100 Viskon\n\nÖlçü tablosu için tablo butonuna basın."}
+          placeholder={"Ölçü tablosu için tablo butonuna basın; seçtiğiniz bedenler tabloya otomatik gelir.\nÖrn. Model 1,72 m ve 38 beden giyiyor."}
         />
         <MarkdownField name="care" label="Bakım" rows={3} defaultValue={product?.care ?? "30°C'de tersten yıkayın."} />
       </div>
