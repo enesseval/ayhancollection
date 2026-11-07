@@ -441,6 +441,24 @@ export const demoRepo: Repo = {
     audit(actorId, "delete", "size_chart", id);
   },
 
+  async setProductStatus(id, status, actorId) {
+    const p = store().products.find((x) => x.id === id);
+    if (p) {
+      p.status = status;
+      audit(actorId, "status:" + status, "product", p.slug);
+    }
+  },
+
+  async deleteProduct(id, actorId) {
+    const s = store();
+    if (s.orders.some((o) => o.items.some((i) => i.productId === id)))
+      throw new Error("Bu ürün siparişlerde geçtiği için silinemez; sipariş geçmişi korunmalı. Bunun yerine arşivleyin.");
+    const p = s.products.find((x) => x.id === id);
+    s.products = s.products.filter((x) => x.id !== id);
+    if (p) audit(actorId, "delete", "product", p.slug);
+    return p?.media.map((m) => m.key) ?? [];
+  },
+
   async archiveProduct(id, actorId) {
     const p = store().products.find((x) => x.id === id);
     if (p) {

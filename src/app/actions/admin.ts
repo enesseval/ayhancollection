@@ -1,4 +1,5 @@
 "use server";
+import { randomBytes } from "node:crypto";
 import { features } from "@/lib/env";
 import { revalidatePath } from "next/cache";
 import { repo } from "@/lib/data";
@@ -285,5 +286,64 @@ export async function moveCategory(id: string, dir: -1 | 1): Promise<AdminResult
     await repo.reorderCategories(siblings.map((c) => c.id), actor);
     revalidateStore();
     return { ok: true as const, message: "Sıra güncellendi" };
+  }) as Promise<AdminResult>;
+}
+
+/* ---------------- Ürün listesi kısayolları ---------------- */
+
+export async function setProductStatus(id: string, status: string): Promise<AdminResult> {
+  return guard(async (actor) => {
+    const st = z.enum(["active", "draft", "archived"]).parse(status);
+    const p = await repo.getProductById(z.string().uuid().parse(id));
+    if (!p) return { ok: false as const, error: "Ürün bulunamadı" };
+    if (st === "active" && (!p.media.length || !p.variants.some((v) => v.stock > 0))) {
+      const missing = [!p.media.length && "en az 1 görsel", !p.variants.some((v) => v.stock > 0) && "stoğu olan en az 1 beden"].filter(Boolean).join(" ve ");
+      return { ok: false as const, error: `"${p.name}" yayına alınamadı: ${missing} gerekli.` };
+    }
+    await repo.setProductStatus(p.id, st, actor);
+    revalidateCatalog(p.slug);
+    return { ok: true as const, message: `"${p.name}" ${st === "active" ? "yayına alındı" : st === "draft" ? "taslağa alındı" : "arşivlendi"}` };
+  }) as Promise<AdminResult>;
+}
+
+export async function deleteProduct(id: string): Promise<AdminResult> {
+  return guard(async (actor) => {
+    const p = await repo.getProductById(z.string().uuid().parse(id));
+    if (!p) return { ok: false as const, error: "Ürün bulunamadı" };
+    const keys = await repo.deleteProduct(p.id, actor);
+    for (const k of keys) await deleteProductImage(k).catch((e) => console.error("[media delete]", e));
+    revalidateCatalog(p.slug);
+    revalidatePath("/yonetim/urunler");
+    return { ok: true as const, message: `"${p.name}" silindi` };
+  }) as Promise<AdminResult>;
+}
+
+/** Ürünü taslak olarak çoğaltır (görseller kopyalanmaz: aynı dosyayı iki ürün paylaşmasın) */
+export async function duplicateProduct(id: string): Promise<AdminResult> {
+  return guard(async (actor) => {
+    const p = await repo.getProductById(z.string().uuid().parse(id));
+    if (!p) return { ok: false as const, error: "Ürün bulunamadı" };
+    const suffix = randomBytes(2).toString("hex").toUpperCase();
+    const saved = await repo.upsertProduct(
+      {
+        name: `${p.name} (kopya)`,
+        slug: `${p.slug.slice(0, 70)}-kopya`,
+        description: p.description,
+        fabric: p.fabric,
+        measurements: p.measurements,
+        care: p.care,
+        categoryId: p.categoryId,
+        basePrice: p.basePrice,
+        compareAtPrice: p.compareAtPrice,
+        status: "draft",
+        isNew: p.isNew,
+        isBestseller: false,
+        sizeChartId: p.sizeChartId,
+        variants: p.variants.map((v) => ({ id: "", sku: `${v.sku.slice(0, 34)}-${suffix}`, size: v.size, color: v.color, colorHex: v.colorHex, stock: v.stock, priceOverride: v.priceOverride })),
+      },
+      actor,
+    );
+    revalidatePath("/yonetim/urunler");
+    return { ok: true as const, message: `Kopya oluşturuldu (taslak). Görselleri ekleyip yayına alabilirsiniz.`, id: saved.id };
   }) as Promise<AdminResult>;
 }

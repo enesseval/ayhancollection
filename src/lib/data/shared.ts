@@ -30,7 +30,7 @@ export function filterProducts(
   q: ProductQuery,
   categoryIds: string[] | null,
 ): Product[] {
-  let list = all.filter((p) => (q.includeInactive ? p.status !== "archived" : p.status === "active"));
+  let list = q.includeArchived ? [...all] : all.filter((p) => (q.includeInactive ? p.status !== "archived" : p.status === "active"));
   if (categoryIds) list = list.filter((p) => categoryIds.includes(p.categoryId));
   if (q.q) {
     const needle = trLower(q.q.trim());

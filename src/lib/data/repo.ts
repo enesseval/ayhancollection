@@ -100,6 +100,9 @@ export interface Repo {
   confirmTransfer(id: string, actorId: string): Promise<Order | null>;
   upsertProduct(input: ProductInput, actorId: string): Promise<Product>;
   archiveProduct(id: string, actorId: string): Promise<void>;
+  setProductStatus(id: string, status: Product["status"], actorId: string): Promise<void>;
+  /** Sipariş geçmişi olan ürün silinemez (hata fırlatır); silinen ürünün görsel anahtarlarını döndürür */
+  deleteProduct(id: string, actorId: string): Promise<string[]>;
   addProductMedia(productId: string, media: Media, actorId: string): Promise<void>;
   removeProductMedia(productId: string, key: string, actorId: string): Promise<void>;
   reorderProductMedia(productId: string, keys: string[], actorId: string): Promise<void>;

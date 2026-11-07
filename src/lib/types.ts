@@ -176,6 +176,8 @@ export type ProductQuery = {
   onlyDiscounted?: boolean;
   limit?: number;
   includeInactive?: boolean;
+  /** Yönetim: arşivdekiler dahil her şey */
+  includeArchived?: boolean;
 };
 
 export type CartLineInput = { variantId: string; qty: number };

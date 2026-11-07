@@ -149,7 +149,7 @@ export const supabaseRepo: Repo = {
 
   async listProducts(q = {}) {
     let query = db().from("products").select(PRODUCT_SELECT);
-    query = q.includeInactive ? query.neq("status", "archived") : query.eq("status", "active");
+    if (!q.includeArchived) query = q.includeInactive ? query.neq("status", "archived") : query.eq("status", "active");
     let catIds: string[] | null = null;
     if (q.categorySlug) {
       const cats = await allCategories();
@@ -527,6 +527,21 @@ export const supabaseRepo: Repo = {
     // Bağlı ürünlerde size_chart_id otomatik boşalır (on delete set null)
     check(await db().from("size_charts").delete().eq("id", id));
     await audit(actorId, "delete", "size_chart", id);
+  },
+
+  async setProductStatus(id, status, actorId) {
+    check(await db().from("products").update({ status }).eq("id", id));
+    await audit(actorId, "status:" + status, "product", id);
+  },
+
+  async deleteProduct(id, actorId) {
+    const ordered = check(await db().from("order_items").select("id").eq("product_id", id).limit(1)) as any[];
+    if (ordered.length) throw new Error("Bu ürün siparişlerde geçtiği için silinemez; sipariş geçmişi korunmalı. Bunun yerine arşivleyin.");
+    const media = check(await db().from("product_media").select("storage_key").eq("product_id", id)) as any[];
+    const row = check(await db().from("products").select("slug").eq("id", id).maybeSingle()) as any;
+    check(await db().from("products").delete().eq("id", id));
+    await audit(actorId, "delete", "product", row?.slug ?? id);
+    return media.map((m) => m.storage_key as string);
   },
 
   async archiveProduct(id, actorId) {
