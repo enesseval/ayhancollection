@@ -12,11 +12,12 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const suggestions = term ? [] : await repo.listProducts({ onlyBestseller: true, limit: 4 });
   return (
     <div className="container-x py-10">
+      <h1 className="mb-6 text-center text-3xl">{term ? `“${term}” araması` : "Ürün ara"}</h1>
       <form action="/arama" role="search" className="mx-auto max-w-2xl">
         <label htmlFor="q" className="sr-only">Ürün ara</label>
         <div className="relative">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
-          <input id="q" name="q" defaultValue={term} className="input !min-h-14 !pl-12 text-lg" placeholder="Tunik, eşarp, pijama…" autoFocus maxLength={60} />
+          <input id="q" name="q" defaultValue={term} className="input !min-h-14 !pl-12 text-lg" placeholder="Tunik, eşarp, pijama…" autoFocus={!term} maxLength={60} />
         </div>
       </form>
       <div className="mt-10">

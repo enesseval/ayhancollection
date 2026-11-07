@@ -21,7 +21,7 @@ export function FreeShippingBar({ subtotal, threshold }: { subtotal: number; thr
           <b>Kargonuz ücretsiz!</b>
         )}
       </p>
-      <div className="h-1.5 overflow-hidden rounded-full bg-sand" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+      <div className="h-1.5 overflow-hidden rounded-full bg-sand" role="progressbar" aria-label="Ücretsiz kargoya kalan tutar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
         <div className="h-full bg-rose transition-[width] duration-500" style={{ width: `${pct}%` }} />
       </div>
     </div>

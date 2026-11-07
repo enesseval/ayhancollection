@@ -5,7 +5,7 @@
   --color-canvas: #faf8f6;
   --color-ink: #141414;
   --color-ink-soft: #4a4744;
-  --color-muted: #77716b;
+  --color-muted: #66605a; /* WCAG AA: krem/kum zeminlerde ≥ 5:1 */
   --color-line: #e6dfd8;
   --color-sand: #ede6de;
   --color-blush: #e8b4b8;

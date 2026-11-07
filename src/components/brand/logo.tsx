@@ -15,12 +15,13 @@ export function Butterfly({ className = "" }: { className?: string }) {
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
-    <Link href="/" className="group inline-flex items-center gap-2 text-ink" aria-label="Ayşe Ayhan Collection ana sayfa">
+    <Link href="/" className="group inline-flex items-center gap-2 text-ink">
       <span className="relative inline-flex flex-col items-center leading-none">
         <span className={`font-serif font-semibold tracking-[0.2em] ${compact ? "text-base" : "text-lg sm:text-xl"}`}>
           AYŞE AYHAN
         </span>
         <span className="-mt-0.5 self-end pr-1 font-serif text-[11px] italic tracking-normal text-ink-soft">Collection</span>
+        <span className="sr-only"> ana sayfa</span>
         <Butterfly className="pointer-events-none absolute -right-5 -top-3.5 h-5 w-7 text-rose/70 transition-transform duration-300 group-hover:-translate-y-0.5" />
       </span>
     </Link>
