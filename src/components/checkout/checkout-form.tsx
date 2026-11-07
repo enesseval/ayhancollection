@@ -164,7 +164,7 @@ export function CheckoutForm({ defaultEmail, defaultName, loggedIn, demoPayment,
           <h2 className="mb-4 text-xl">3. Ödeme</h2>
           <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Ödeme yöntemi">
             {[
-              { v: "card" as const, icon: CreditCard, t: "Kredi / banka kartı", d: "3D Secure · 3 ve 6 taksit" },
+              { v: "card" as const, icon: CreditCard, t: "Kredi / banka kartı", d: "3D Secure ile güvenli ödeme" },
               { v: "transfer" as const, icon: Landmark, t: "Havale / EFT", d: "24 saat içinde ödeme" },
             ].map((o) => (
               <button

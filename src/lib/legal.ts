@@ -32,7 +32,7 @@ export const LEGAL_PAGES: Record<string, LegalPage> = {
     sections: [
       { h: "Siparişim ne zaman kargoya verilir?", p: ["Siparişler ödeme onayından sonra 1-3 iş günü içinde kargoya verilir. Kargo takip numarası SMS ve e-posta ile iletilir."] },
       { h: "Kargo ücreti ne kadar?", p: ["1.500 TL ve üzeri siparişlerde kargo ücretsizdir. Altındaki siparişlerde kargo ücreti ödeme adımında gösterilir."] },
-      { h: "Hangi ödeme yöntemlerini kullanabilirim?", p: ["Kredi/banka kartı (3D Secure, iyzico güvencesiyle, 3 ve 6 taksit seçenekleriyle) ve havale/EFT ile ödeme yapabilirsiniz."] },
+      { h: "Hangi ödeme yöntemlerini kullanabilirim?", p: ["Kredi/banka kartı (3D Secure, iyzico güvencesiyle) ve havale/EFT ile ödeme yapabilirsiniz."] },
       { h: "Üye olmadan sipariş verebilir miyim?", p: ["Evet. Misafir olarak sipariş verebilir, sipariş numaranız ve e-postanızla siparişinizi takip edebilirsiniz."] },
       { h: "İade nasıl yapılır?", p: ["Teslimattan itibaren 14 gün içinde, ürün kullanılmamış ve etiketi üzerinde olmak kaydıyla iade edebilirsiniz. Ayrıntılar İade ve Değişim sayfasındadır."] },
       { h: "Bedenimi nasıl seçerim?", p: ["Her ürün sayfasında beden tablosu bulunur. İki beden arasında kalırsanız bir büyük bedeni öneririz; dilerseniz WhatsApp'tan bize danışabilirsiniz."] },
