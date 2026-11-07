@@ -173,7 +173,7 @@ export function CheckoutForm({ defaultEmail, defaultName, loggedIn, demoPayment,
                 role="radio"
                 aria-checked={method === o.v}
                 onClick={() => setMethod(o.v)}
-                className={`flex items-center gap-3 rounded-md border p-4 text-left ${method === o.v ? "border-ink ring-1 ring-ink" : "border-line bg-white"}`}
+                className={`flex items-center gap-3 rounded-md border p-4 text-left ${method === o.v ? "border-ink ring-1 ring-ink" : "border-line bg-white transition-colors hover:border-ink"}`}
               >
                 <o.icon className="h-5 w-5 shrink-0" strokeWidth={1.5} />
                 <span>

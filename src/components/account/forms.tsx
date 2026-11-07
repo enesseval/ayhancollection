@@ -29,7 +29,7 @@ export function AuthForms({ next, demoHint }: { next: string; demoHint: string |
             role="tab"
             aria-selected={tab === t}
             onClick={() => setTab(t)}
-            className={`-mb-px border-b-2 py-3 text-sm font-medium ${tab === t ? "border-ink" : "border-transparent text-muted"}`}
+            className={`-mb-px border-b-2 py-3 text-sm font-medium ${tab === t ? "border-ink" : "border-transparent text-muted transition-colors hover:text-ink"}`}
           >
             {t === "login" ? "Giriş yap" : "Üye ol"}
           </button>

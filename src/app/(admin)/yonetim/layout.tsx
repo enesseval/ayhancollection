@@ -53,7 +53,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="hidden px-4 pt-6 text-xs text-muted lg:block">
           <p className="truncate">{user.email}</p>
           <form action={logoutAction}>
-            <button className="mt-2 underline">Çıkış yap</button>
+            <button className="mt-2 underline hover:text-ink">Çıkış yap</button>
           </form>
         </div>
       </aside>

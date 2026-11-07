@@ -152,7 +152,7 @@ export function ProductView({ product, placeholders, whatsapp, sizeChart, detail
                   aria-pressed={c.name === color}
                   aria-label={`${c.name}${any ? "" : " (tükendi)"}`}
                   title={c.name}
-                  className={`relative h-10 w-10 rounded-full border-2 p-0.5 ${c.name === color ? "border-ink" : "border-transparent"} ${any ? "" : "opacity-40"}`}
+                  className={`relative h-10 w-10 rounded-full border-2 p-0.5 ${c.name === color ? "border-ink" : "border-transparent hover:border-line"} ${any ? "" : "opacity-40"}`}
                 >
                   <span className="block h-full w-full rounded-full border border-line" style={{ background: c.hex }} />
                 </button>
@@ -205,13 +205,13 @@ export function ProductView({ product, placeholders, whatsapp, sizeChart, detail
 
         <div className="mt-6 flex gap-3">
           <div className="flex items-center border border-line bg-white">
-            <button type="button" className="p-3 disabled:opacity-40" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={qty <= 1} aria-label="Adedi azalt">
+            <button type="button" className="p-3 transition-colors hover:bg-sand disabled:opacity-40 disabled:hover:bg-transparent" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={qty <= 1} aria-label="Adedi azalt">
               <Minus className="h-4 w-4" />
             </button>
             <span className="w-8 text-center" aria-live="polite">{qty}</span>
             <button
               type="button"
-              className="p-3 disabled:opacity-40"
+              className="p-3 transition-colors hover:bg-sand disabled:opacity-40 disabled:hover:bg-transparent"
               onClick={() => setQty((q) => Math.min(q + 1, variant?.stock ?? 1, 10))}
               disabled={!variant || qty >= Math.min(variant.stock, 10)}
               aria-label="Adedi artır"

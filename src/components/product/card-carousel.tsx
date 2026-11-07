@@ -45,7 +45,7 @@ export function CardCarousel({ children, label, raiseDots = false }: { children:
           type="button"
           onClick={(e) => go(e, -1)}
           aria-label="Önceki görsel"
-          className="absolute left-1.5 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/90 p-1.5 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 md:block"
+          className="absolute left-1.5 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/90 p-1.5 opacity-0 shadow-sm transition group-hover:opacity-100 hover:bg-white hover:shadow md:block"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -55,7 +55,7 @@ export function CardCarousel({ children, label, raiseDots = false }: { children:
           type="button"
           onClick={(e) => go(e, 1)}
           aria-label="Sonraki görsel"
-          className="absolute right-1.5 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/90 p-1.5 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 md:block"
+          className="absolute right-1.5 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/90 p-1.5 opacity-0 shadow-sm transition group-hover:opacity-100 hover:bg-white hover:shadow md:block"
         >
           <ChevronRight className="h-4 w-4" />
         </button>

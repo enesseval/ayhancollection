@@ -70,13 +70,13 @@ export default async function HomePage() {
             </div>
           </div>
           <div className="relative grid grid-cols-[1.2fr_1fr] gap-3 sm:gap-4">
-            <Link href={`/urun/${heroA.slug}`} className="row-span-2 overflow-hidden rounded-t-[999px] bg-sand">
+            <Link href={`/urun/${heroA.slug}`} className="row-span-2 overflow-hidden rounded-t-[999px] bg-sand transition-opacity hover:opacity-90">
               <ProductImage media={heroA.media[0]} sizes="(max-width: 768px) 55vw, 30vw" preload />
             </Link>
-            <Link href={`/urun/${heroB.slug}`} className="overflow-hidden rounded-t-[999px] bg-sand">
+            <Link href={`/urun/${heroB.slug}`} className="overflow-hidden rounded-t-[999px] bg-sand transition-opacity hover:opacity-90">
               <ProductImage media={heroB.media[0]} sizes="(max-width: 768px) 45vw, 22vw" preload />
             </Link>
-            <Link href={`/urun/${heroC.slug}`} className="overflow-hidden bg-sand">
+            <Link href={`/urun/${heroC.slug}`} className="overflow-hidden bg-sand transition-opacity hover:opacity-90">
               <ProductImage media={heroC.media[0]} sizes="(max-width: 768px) 45vw, 22vw" />
             </Link>
           </div>

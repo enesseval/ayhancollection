@@ -126,9 +126,9 @@ export function MediaManager({ productId, productName, media, colors }: { produc
               {i === 0 && <span className="absolute left-1 top-1 bg-white px-1.5 text-[10px] font-semibold">KAPAK</span>}
               {m.color && <span className="absolute bottom-1 left-1 bg-white/90 px-1.5 text-[10px]">{m.color}</span>}
               <div className="absolute right-1 top-1 flex flex-col gap-1">
-                <button type="button" onClick={() => del(m.key)} className="rounded bg-white/90 p-1 text-danger" aria-label="Sil"><Trash2 className="h-3.5 w-3.5" /></button>
-                <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="rounded bg-white/90 p-1 disabled:opacity-30" aria-label="Sola taşı"><ArrowLeft className="h-3.5 w-3.5" /></button>
-                <button type="button" onClick={() => move(i, 1)} disabled={i === media.length - 1} className="rounded bg-white/90 p-1 disabled:opacity-30" aria-label="Sağa taşı"><ArrowRight className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={() => del(m.key)} className="rounded bg-white/90 p-1 text-danger hover:bg-white hover:shadow" aria-label="Sil"><Trash2 className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="rounded bg-white/90 p-1 hover:bg-white hover:shadow disabled:opacity-30" aria-label="Sola taşı"><ArrowLeft className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={() => move(i, 1)} disabled={i === media.length - 1} className="rounded bg-white/90 p-1 hover:bg-white hover:shadow disabled:opacity-30" aria-label="Sağa taşı"><ArrowRight className="h-3.5 w-3.5" /></button>
               </div>
             </li>
           ))}

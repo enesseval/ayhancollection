@@ -55,6 +55,32 @@
   summary::-webkit-details-marker {
     display: none;
   }
+  /* Tailwind v4 butonlarda imleci varsayılan bırakır: tıklanabilir her öğede el imleci */
+  button:not(:disabled),
+  [role="button"],
+  [role="tab"],
+  [role="radio"]:not([aria-disabled="true"]),
+  summary,
+  select,
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="color"],
+  label:has(> input[type="checkbox"]),
+  label:has(> input[type="radio"]) {
+    cursor: pointer;
+  }
+  button:disabled,
+  select:disabled,
+  input:disabled {
+    cursor: not-allowed;
+  }
+  /* Altı çizili metin bağlantıları: üzerine gelince renk değişsin */
+  :where(a, button)[class~="underline"] {
+    transition: color 0.15s;
+  }
+  :where(a, button)[class~="underline"]:hover {
+    color: var(--color-rose);
+  }
 }
 
 @utility btn {

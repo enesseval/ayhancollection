@@ -40,7 +40,7 @@ export function ProductCard({ product, preload = false }: { product: Product; pr
           ) : null}
         </div>
         <div className="mt-3 space-y-1">
-          <h3 className="line-clamp-2 font-sans text-sm leading-snug text-ink">{product.name}</h3>
+          <h3 className="line-clamp-2 font-sans text-sm leading-snug text-ink decoration-1 underline-offset-2 group-hover:underline">{product.name}</h3>
           <p className="flex items-baseline gap-2 text-sm">
             <span className="font-semibold">
               {formatTRY(fromPrice)}

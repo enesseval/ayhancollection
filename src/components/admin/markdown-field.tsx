@@ -79,10 +79,10 @@ export function MarkdownField({ name, label, defaultValue = "", rows = 5, placeh
       <div className="mb-1 flex items-center justify-between gap-2">
         <label className="label !mb-0" htmlFor={name}>{label}</label>
         <div className="flex rounded border border-line bg-white p-0.5 text-xs">
-          <button type="button" onClick={() => setPreview(false)} className={`flex items-center gap-1 rounded px-2 py-1 ${!preview ? "bg-ink text-white" : ""}`}>
+          <button type="button" onClick={() => setPreview(false)} className={`flex items-center gap-1 rounded px-2 py-1 ${!preview ? "bg-ink text-white" : "hover:bg-canvas"}`}>
             <Pencil className="h-3 w-3" /> Yaz
           </button>
-          <button type="button" onClick={() => setPreview(true)} className={`flex items-center gap-1 rounded px-2 py-1 ${preview ? "bg-ink text-white" : ""}`}>
+          <button type="button" onClick={() => setPreview(true)} className={`flex items-center gap-1 rounded px-2 py-1 ${preview ? "bg-ink text-white" : "hover:bg-canvas"}`}>
             <Eye className="h-3 w-3" /> Önizle
           </button>
         </div>

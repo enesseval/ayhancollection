@@ -71,7 +71,7 @@ export function CartDrawer({ freeShippingThreshold }: { freeShippingThreshold: n
             <ul className="flex-1 divide-y divide-line overflow-y-auto px-5">
               {items.map((i) => (
                 <li key={i.variantId} className="flex gap-3 py-4">
-                  <Link href={`/urun/${i.productSlug}`} onClick={() => setOpen(false)} className="w-20 shrink-0 bg-sand">
+                  <Link href={`/urun/${i.productSlug}`} onClick={() => setOpen(false)} className="w-20 shrink-0 bg-sand transition-opacity hover:opacity-85">
                     {i.imageKey && (
                       <Image src={i.imageKey} alt={i.productName} width={240} height={300} sizes="80px" className="aspect-[4/5] w-full object-cover" />
                     )}
@@ -88,11 +88,11 @@ export function CartDrawer({ freeShippingThreshold }: { freeShippingThreshold: n
                     </p>
                     <div className="mt-auto flex items-center justify-between pt-2">
                       <div className="flex items-center border border-line">
-                        <button className="p-2 disabled:opacity-40" onClick={() => setQty(i.variantId, i.qty - 1)} disabled={i.qty <= 1} aria-label="Azalt">
+                        <button className="p-2 transition-colors hover:bg-sand disabled:opacity-40 disabled:hover:bg-transparent" onClick={() => setQty(i.variantId, i.qty - 1)} disabled={i.qty <= 1} aria-label="Azalt">
                           <Minus className="h-3.5 w-3.5" />
                         </button>
                         <span className="w-8 text-center text-sm" aria-live="polite">{i.qty}</span>
-                        <button className="p-2 disabled:opacity-40" onClick={() => setQty(i.variantId, i.qty + 1)} disabled={i.qty >= Math.min(i.maxQty, 10)} aria-label="Artır">
+                        <button className="p-2 transition-colors hover:bg-sand disabled:opacity-40 disabled:hover:bg-transparent" onClick={() => setQty(i.variantId, i.qty + 1)} disabled={i.qty >= Math.min(i.maxQty, 10)} aria-label="Artır">
                           <Plus className="h-3.5 w-3.5" />
                         </button>
                       </div>

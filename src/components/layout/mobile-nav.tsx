@@ -35,37 +35,37 @@ export function MobileNav({ items }: { items: Item[] }) {
               </button>
             </div>
             <nav className="flex-1 overflow-y-auto p-2">
-              <Link href="/kategori/yeni" className="block px-3 py-3 font-medium">
+              <Link href="/kategori/yeni" className="block rounded px-3 py-3 font-medium hover:bg-sand">
                 Yeni Gelenler
               </Link>
               {items.map((it) =>
                 it.children.length ? (
                   <details key={it.href} className="group border-t border-line">
-                    <summary className="flex cursor-pointer items-center justify-between px-3 py-3 font-medium">
+                    <summary className="flex cursor-pointer items-center justify-between rounded px-3 py-3 font-medium hover:bg-sand">
                       {it.label}
                       <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
                     </summary>
                     <div className="pb-2 pl-3">
-                      <Link href={it.href} className="block px-3 py-2 text-sm text-ink-soft">
+                      <Link href={it.href} className="block rounded px-3 py-2 text-sm text-ink-soft hover:bg-sand hover:text-ink">
                         Tümü
                       </Link>
                       {it.children.map((c) => (
-                        <Link key={c.href} href={c.href} className="block px-3 py-2 text-sm text-ink-soft">
+                        <Link key={c.href} href={c.href} className="block rounded px-3 py-2 text-sm text-ink-soft hover:bg-sand hover:text-ink">
                           {c.label}
                         </Link>
                       ))}
                     </div>
                   </details>
                 ) : (
-                  <Link key={it.href} href={it.href} className="block border-t border-line px-3 py-3 font-medium">
+                  <Link key={it.href} href={it.href} className="block border-t border-line px-3 py-3 font-medium hover:bg-sand">
                     {it.label}
                   </Link>
                 ),
               )}
               <div className="mt-4 border-t border-line pt-4 text-sm">
-                <Link href="/hesabim" className="block px-3 py-2">Hesabım</Link>
-                <Link href="/siparis-takip" className="block px-3 py-2">Sipariş Takibi</Link>
-                <Link href="/iletisim" className="block px-3 py-2">İletişim</Link>
+                <Link href="/hesabim" className="block rounded px-3 py-2 hover:bg-sand">Hesabım</Link>
+                <Link href="/siparis-takip" className="block rounded px-3 py-2 hover:bg-sand">Sipariş Takibi</Link>
+                <Link href="/iletisim" className="block rounded px-3 py-2 hover:bg-sand">İletişim</Link>
               </div>
             </nav>
           </div>

@@ -110,7 +110,7 @@ export function CartPageClient({ threshold }: { threshold: number }) {
             const line = priced?.lines.find((l) => l.variantId === i.variantId);
             return (
               <li key={i.variantId} className="flex gap-4 py-5">
-                <Link href={`/urun/${i.productSlug}`} className="w-24 shrink-0 bg-sand sm:w-28">
+                <Link href={`/urun/${i.productSlug}`} className="w-24 shrink-0 bg-sand transition-opacity hover:opacity-85 sm:w-28">
                   {i.imageKey && <Image src={i.imageKey} alt={i.productName} width={240} height={300} sizes="112px" className="aspect-[4/5] w-full object-cover" />}
                 </Link>
                 <div className="flex flex-1 flex-col">
@@ -126,11 +126,11 @@ export function CartPageClient({ threshold }: { threshold: number }) {
                   </div>
                   <div className="mt-auto flex items-center justify-between pt-3">
                     <div className="flex items-center border border-line bg-white">
-                      <button className="p-2.5 disabled:opacity-40" onClick={() => setQty(i.variantId, i.qty - 1)} disabled={i.qty <= 1} aria-label="Azalt">
+                      <button className="p-2.5 transition-colors hover:bg-sand disabled:opacity-40 disabled:hover:bg-transparent" onClick={() => setQty(i.variantId, i.qty - 1)} disabled={i.qty <= 1} aria-label="Azalt">
                         <Minus className="h-3.5 w-3.5" />
                       </button>
                       <span className="w-8 text-center text-sm">{i.qty}</span>
-                      <button className="p-2.5 disabled:opacity-40" onClick={() => setQty(i.variantId, i.qty + 1)} disabled={i.qty >= Math.min(i.maxQty, 10)} aria-label="Artır">
+                      <button className="p-2.5 transition-colors hover:bg-sand disabled:opacity-40 disabled:hover:bg-transparent" onClick={() => setQty(i.variantId, i.qty + 1)} disabled={i.qty >= Math.min(i.maxQty, 10)} aria-label="Artır">
                         <Plus className="h-3.5 w-3.5" />
                       </button>
                     </div>

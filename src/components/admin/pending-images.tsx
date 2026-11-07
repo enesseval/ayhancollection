@@ -52,9 +52,9 @@ export function PendingImages({ files, onChange }: { files: File[]; onChange: (f
               <img src={urls[i]} alt={f.name} className="aspect-[4/5] w-full object-cover" />
               {i === 0 && <span className="absolute left-1 top-1 bg-white/95 px-1.5 py-0.5 text-[10px] font-semibold">KAPAK</span>}
               <div className="absolute right-1 top-1 flex flex-col gap-1">
-                <button type="button" onClick={() => onChange(files.filter((_, j) => j !== i))} className="rounded bg-white/95 p-1 text-danger" aria-label="Görseli kaldır"><Trash2 className="h-3.5 w-3.5" /></button>
-                <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="rounded bg-white/95 p-1 disabled:opacity-40" aria-label="Öne al"><ArrowLeft className="h-3.5 w-3.5" /></button>
-                <button type="button" onClick={() => move(i, 1)} disabled={i === files.length - 1} className="rounded bg-white/95 p-1 disabled:opacity-40" aria-label="Arkaya al"><ArrowRight className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={() => onChange(files.filter((_, j) => j !== i))} className="rounded bg-white/95 p-1 text-danger hover:bg-white hover:shadow" aria-label="Görseli kaldır"><Trash2 className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="rounded bg-white/95 p-1 hover:bg-white hover:shadow disabled:opacity-40" aria-label="Öne al"><ArrowLeft className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={() => move(i, 1)} disabled={i === files.length - 1} className="rounded bg-white/95 p-1 hover:bg-white hover:shadow disabled:opacity-40" aria-label="Arkaya al"><ArrowRight className="h-3.5 w-3.5" /></button>
               </div>
             </div>
           ))}
