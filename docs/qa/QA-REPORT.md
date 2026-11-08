@@ -31,7 +31,7 @@
 | I-1 | ✅ Düzeltildi | 404 sayfalarında sekme başlığı "Sayfa bulunamadı" (test eklendi) |
 | I-5 | ✅ Düzeltildi | Testlerde `networkidle` yerine `load` + öğe bekleme |
 | I-2, I-3, I-6 | ⏸ Açık | Bilinçli bırakıldı / gerçek servis gerektiriyor |
-| I-4 | ❓ Karar bekliyor | Sepetten büyük sabit kuponda yalnız kargo ödenmesi istenen davranış mı? |
+| I-4 | ✅ Düzeltildi | Tutar kuponunda min. sepet, kupon tutarının en az 1,5 katı (10 TL kupon → 15 TL sepet); panelde ve sepette denetlenir |
 
 ---
 

@@ -179,6 +179,30 @@ test("kupon oluştur → sepette uygulanır; geçersiz yüzde reddedilir", async
   await expect(page.getByText("-₺199,80")).toBeVisible();
 });
 
+test("tutar kuponu: min. sepet kupon tutarının en az 1,5 katı olmalı", async ({ page }) => {
+  await loginAdmin(page);
+  const code = `SBT${Date.now().toString().slice(-5)}`;
+  await page.goto("/yonetim/kuponlar");
+  await page.getByRole("textbox", { name: "Kod" }).fill(code);
+  await page.getByLabel("Tür").selectOption("fixed");
+  await page.getByRole("textbox", { name: "Tutar (TL)" }).fill("800");
+  await expect(page.getByText("En az 1200 TL")).toBeVisible();
+  await page.getByRole("textbox", { name: "Min. sepet (TL)" }).fill("1000");
+  await page.getByRole("button", { name: "Kaydet" }).click();
+  await expect(page.getByText(/min\. sepet en az 1200 TL olmalı/)).toBeVisible();
+  // Boş bırakılınca en düşük geçerli değer (1200 TL) kullanılır
+  await page.getByRole("textbox", { name: "Min. sepet (TL)" }).fill("");
+  await page.getByRole("button", { name: "Kaydet" }).click();
+  await expect(page.getByText("Kupon kaydedildi")).toBeVisible();
+
+  // 999 TL'lik sepette kullanılamaz
+  await addToCart(page, "vizon-uzun-tunik", { size: "40" });
+  await page.goto("/sepet");
+  await page.getByPlaceholder("Kupon kodu").fill(code);
+  await page.getByPlaceholder("Kupon kodu").press("Enter");
+  await expect(page.getByText("Bu kupon 1200 TL ve üzeri sepetlerde geçerli")).toBeVisible();
+});
+
 test("ayarlar: kargo ücreti değişince sepete yansır, hatalı IBAN reddedilir", async ({ page }) => {
   await loginAdmin(page);
   await page.goto("/yonetim/ayarlar");

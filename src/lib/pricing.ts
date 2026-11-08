@@ -1,6 +1,7 @@
 import "server-only";
 import { repo } from "./data";
 import type { CartLineInput, Coupon, PricedLine, Totals } from "./types";
+import { fixedCouponMinSubtotal } from "./validation";
 
 // Sepet tutarının TEK kaynağı. İstemciden gelen hiçbir fiyat kullanılmaz;
 // varyant fiyatları her seferinde veri katmanından okunur.
@@ -12,8 +13,10 @@ export function couponDiscount(c: Coupon, subtotal: number, now = new Date()): {
   if (c.startsAt && new Date(c.startsAt) > now) return { amount: 0, error: "Bu kupon henüz başlamadı" };
   if (c.endsAt && new Date(c.endsAt) < now) return { amount: 0, error: "Bu kuponun süresi doldu" };
   if (c.usageLimit !== null && c.usedCount >= c.usageLimit) return { amount: 0, error: "Kupon kullanım limiti doldu" };
-  if (subtotal < c.minSubtotal) {
-    return { amount: 0, error: `Bu kupon ${Math.round(c.minSubtotal / 100)} TL ve üzeri sepetlerde geçerli` };
+  // Tutar kuponlarında, panelde daha düşük girilmiş olsa bile sepet kupon tutarının en az 1,5 katı olmalı
+  const minSubtotal = c.type === "fixed" ? Math.max(c.minSubtotal, fixedCouponMinSubtotal(c.value)) : c.minSubtotal;
+  if (subtotal < minSubtotal) {
+    return { amount: 0, error: `Bu kupon ${Math.round(minSubtotal / 100)} TL ve üzeri sepetlerde geçerli` };
   }
   const raw = c.type === "percent" ? Math.floor((subtotal * c.value) / 100) : c.value;
   return { amount: Math.min(raw, subtotal), error: null };

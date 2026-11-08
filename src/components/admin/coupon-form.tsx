@@ -2,13 +2,17 @@
 import { useState } from "react";
 import { saveCoupon } from "@/app/actions/admin";
 import type { Coupon } from "@/lib/types";
+import { fixedCouponMinSubtotal } from "@/lib/validation";
 import { Flash, useAdminAction } from "./order-actions";
 
 export function CouponForm({ coupons }: { coupons: Coupon[] }) {
   const { pending, msg, run } = useAdminAction();
   const [editing, setEditing] = useState<Coupon | null>(null);
   const [type, setType] = useState<"percent" | "fixed">("percent");
+  const [valueText, setValueText] = useState("");
   const key = editing?.id ?? "new";
+  const parsedValue = Number((valueText || (editing?.type === "fixed" ? String(editing.value / 100) : "")).replace(",", "."));
+  const fixedMinTL = type === "fixed" && parsedValue > 0 ? fixedCouponMinSubtotal(Math.round(parsedValue * 100)) / 100 : null;
 
   return (
     <form
@@ -25,7 +29,11 @@ export function CouponForm({ coupons }: { coupons: Coupon[] }) {
             code: String(f.get("code") ?? ""),
             type,
             value: type === "percent" ? value : Math.round(value * 100),
-            minSubtotal: Math.round(Number(String(f.get("minSubtotal") || 0).replace(",", ".")) * 100),
+            // Tutar kuponunda min. sepet boş bırakılırsa en düşük geçerli değer kullanılır
+            minSubtotal:
+              type === "fixed" && !String(f.get("minSubtotal") ?? "").trim()
+                ? fixedCouponMinSubtotal(Math.round(value * 100))
+                : Math.round(Number(String(f.get("minSubtotal") || 0).replace(",", ".")) * 100),
             endsAt: String(f.get("endsAt") ?? ""),
             usageLimit: limit ? Number(limit) : null,
             active: f.get("active") === "on",
@@ -42,6 +50,7 @@ export function CouponForm({ coupons }: { coupons: Coupon[] }) {
             const c = coupons.find((x) => x.id === e.target.value) ?? null;
             setEditing(c);
             setType(c?.type ?? "percent");
+            setValueText("");
           }}
           aria-label="Düzenlenecek kupon"
         >
@@ -63,13 +72,24 @@ export function CouponForm({ coupons }: { coupons: Coupon[] }) {
         </div>
         <div>
           <label className="label" htmlFor="value">{type === "percent" ? "Yüzde" : "Tutar (TL)"}</label>
-          <input id="value" name="value" inputMode="decimal" className="input" required defaultValue={editing ? (editing.type === "percent" ? editing.value : editing.value / 100) : ""} />
+          <input id="value" name="value" inputMode="decimal" className="input" required onChange={(e) => setValueText(e.target.value)} defaultValue={editing ? (editing.type === "percent" ? editing.value : editing.value / 100) : ""} />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label" htmlFor="minSubtotal">Min. sepet (TL)</label>
-          <input id="minSubtotal" name="minSubtotal" inputMode="decimal" className="input" defaultValue={editing ? editing.minSubtotal / 100 : ""} />
+          <input
+            id="minSubtotal"
+            name="minSubtotal"
+            inputMode="decimal"
+            className="input"
+            placeholder={fixedMinTL ? String(fixedMinTL) : ""}
+            aria-describedby={fixedMinTL ? "minSubtotalHint" : undefined}
+            defaultValue={editing ? editing.minSubtotal / 100 : ""}
+          />
+          {fixedMinTL && (
+            <p id="minSubtotalHint" className="mt-1 text-xs text-muted">En az {fixedMinTL} TL (boş bırakılırsa bu değer kullanılır)</p>
+          )}
         </div>
         <div>
           <label className="label" htmlFor="usageLimit">Kullanım limiti</label>

@@ -108,6 +108,13 @@ export const productFormSchema = z.object({
     path: ["compareAtPrice"],
   });
 
+/** Sabit tutarlı kuponda sepet, kupon tutarının en az bu katı olmalı (10 TL kupon → en az 15 TL sepet). */
+export const FIXED_COUPON_MIN_RATIO = 1.5;
+/** Kuruş cinsinden kupon tutarı için gereken en düşük sepet tutarı (tam TL'ye yukarı yuvarlanır). */
+export function fixedCouponMinSubtotal(valueKurus: number) {
+  return Math.ceil((valueKurus * FIXED_COUPON_MIN_RATIO) / 100) * 100;
+}
+
 export const couponFormSchema = z.object({
   id: z.string().uuid().optional().or(z.literal("")),
   code: z.string().trim().toUpperCase().regex(/^[A-Z0-9]{3,24}$/, "Kod 3-24 harf/rakam olmalı"),
@@ -117,6 +124,14 @@ export const couponFormSchema = z.object({
   endsAt: z.string().optional().or(z.literal("")),
   usageLimit: z.number().int().positive().nullable(),
   active: z.boolean(),
+}).superRefine((d, ctx) => {
+  if (d.type === "fixed" && d.minSubtotal < fixedCouponMinSubtotal(d.value)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["minSubtotal"],
+      message: `Tutar kuponunda min. sepet en az ${fixedCouponMinSubtotal(d.value) / 100} TL olmalı (kupon tutarının 1,5 katı)`,
+    });
+  }
 });
 
 export const TR_CITIES = [
