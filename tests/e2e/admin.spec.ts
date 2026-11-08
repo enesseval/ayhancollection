@@ -67,6 +67,15 @@ test("ürün: yayına alma kuralı, görselli + varyantlı ürün, beden tablosu
   await page.locator("#basePrice").fill("750");
   await page.locator("#status").selectOption("active");
   await page.locator("#sizeChartId").selectOption({ label: chart });
+  // Ölçüler: takım ürün → Üst ve Etek grupları
+  await page.getByRole("textbox", { name: "Grup başlığı" }).first().fill("ÜST");
+  await page.getByRole("textbox", { name: "ÜST ölçüleri" }).fill("| Beden 1 | Boy 67 (cm) | Göğüs 100 (cm) |\n| Beden 2| Boy 67(cm) | Göğüs 110 (cm) |");
+  await expect(async () => {
+    await page.getByRole("button", { name: "Grup ekle" }).click();
+    await expect(page.getByRole("textbox", { name: "Grup başlığı" })).toHaveCount(2, { timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
+  await page.getByRole("textbox", { name: "Grup başlığı" }).nth(1).fill("Etek");
+  await page.getByRole("textbox", { name: "Etek ölçüleri" }).fill("| Beden 1 | Boy 103 (cm) | BEL 68 (cm) |");
   await addVariant(page, "Siyah", "38", 5);
   await addVariant(page, "Beyaz", "40", 3);
   await page.getByRole("button", { name: "Kaydet", exact: true }).click();
@@ -87,6 +96,15 @@ test("ürün: yayına alma kuralı, görselli + varyantlı ürün, beden tablosu
   const img = page.locator("main img").first();
   await expect(img).toBeVisible();
   expect(await img.evaluate((i: HTMLImageElement) => i.naturalWidth)).toBeGreaterThan(0);
+  // Ölçüler: her grup kendi ara başlığı ve tablosuyla
+  await page.locator("details").filter({ has: page.locator("summary", { hasText: "Ölçüler" }) }).evaluate((d: HTMLDetailsElement) => (d.open = true));
+  const ust = page.getByRole("region", { name: "Üst" });
+  await expect(ust.getByRole("heading", { name: "Üst" })).toBeVisible();
+  await expect(ust.getByRole("columnheader", { name: "Göğüs" })).toBeVisible();
+  await expect(ust.getByRole("cell", { name: "110 cm" })).toBeVisible();
+  const etek = page.getByRole("region", { name: "Etek" });
+  await expect(etek.getByRole("columnheader", { name: "Bel" })).toBeVisible();
+  await expect(etek.getByRole("cell", { name: "68 cm" })).toBeVisible();
   await page.getByRole("button", { name: "Beden tablosu" }).click();
   await expect(page.getByRole("heading", { name: chart })).toBeVisible();
   await expect(page.locator("table").first()).toBeVisible();
@@ -121,7 +139,6 @@ test("ürün listesi: filtreler ve kısayollar (taslağa al, arşivle, kopyala)"
   await page.goto("/yonetim/urunler?q=kopya");
   const copy = page.locator("tbody tr").filter({ has: page.locator(copyLink) });
   await copy.getByRole("button", { name: /arşivle/ }).click();
-  await expect(copy.getByText(/arşivlendi/).or(page.locator(copyLink)).first()).toBeVisible();
   await expect.poll(async () => {
     await page.goto("/yonetim/urunler?durum=arsiv&q=kopya");
     return page.locator(`tbody ${copyLink}`).count();

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { archiveProduct, saveProduct, type AdminResult } from "@/app/actions/admin";
 import { slugify } from "@/lib/format";
 import { MarkdownField } from "./markdown-field";
+import { MeasurementsField } from "./measurements-field";
 import { PendingImages } from "./pending-images";
 import { uploadProductImage } from "./media-manager";
 import { VariantTable, useVariantRows, type VariantRow } from "./variant-table";
@@ -154,14 +155,7 @@ export function ProductEditor({ product, categories, sizeCharts }: { product: Pr
           defaultValue={product?.fabric}
           placeholder="Örn. %100 Viskon, dökümlü ve terletmez"
         />
-        <MarkdownField
-          name="measurements"
-          label="Ölçüler"
-          rows={6}
-          defaultValue={product?.measurements}
-          sizes={vt.allSizes}
-          placeholder={"Ölçü tablosu için tablo butonuna basın; seçtiğiniz bedenler tabloya otomatik gelir.\nÖrn. Model 1,72 m ve 38 beden giyiyor."}
-        />
+        <MeasurementsField defaultValue={product?.measurements} sizes={vt.allSizes} onChange={() => setFormDirty(true)} />
         <MarkdownField name="care" label="Bakım" rows={3} defaultValue={product?.care ?? "30°C'de tersten yıkayın."} />
       </div>
 

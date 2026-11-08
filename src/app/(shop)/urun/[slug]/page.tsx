@@ -7,6 +7,7 @@ import { formatTRY, mediaUrl } from "@/lib/format";
 import { ProductView } from "@/components/product/product-view";
 import { ProductCard } from "@/components/product/product-card";
 import { thumbDataUrl } from "@/components/product/product-image";
+import { Measurements } from "@/components/product/measurements";
 import { Markdown, markdownToPlain } from "@/components/markdown";
 
 export const revalidate = 300;
@@ -104,7 +105,7 @@ export default async function ProductPage({ params }: Props) {
         details={[
           { title: "Ürün açıklaması", body: <Markdown>{product.description}</Markdown> , filled: !!product.description.trim() },
           { title: "Kumaş", body: <Markdown>{product.fabric}</Markdown>, filled: !!product.fabric.trim() },
-          { title: "Ölçüler", body: <Markdown>{product.measurements}</Markdown>, filled: !!product.measurements.trim() },
+          { title: "Ölçüler", body: <Measurements text={product.measurements} />, filled: !!product.measurements.trim() },
           { title: "Bakım", body: <Markdown>{product.care}</Markdown>, filled: !!product.care.trim() },
           {
             title: "Kargo ve iade",

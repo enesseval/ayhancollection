@@ -7,8 +7,16 @@ import { Markdown } from "@/components/markdown";
 // Kaydedilen değer düz Markdown metnidir; mağazada aynı görüntüleyiciyle gösterilir.
 
 type Props = {
-  name: string;
+  /** Verilirse değer bu adla forma gizli alan olarak gider */
+  name?: string;
+  /** Etiket/textarea kimliği (name yoksa zorunlu gibi düşünün) */
+  id?: string;
   label: string;
+  /** Etiketi görsel olarak gizler (ekran okuyucuda kalır) */
+  hideLabel?: boolean;
+  onValueChange?: (v: string) => void;
+  /** Önizlemeyi özel bir görüntüleyiciyle gösterir (varsayılan: Markdown) */
+  renderPreview?: (v: string) => React.ReactNode;
   defaultValue?: string;
   rows?: number;
   placeholder?: string;
@@ -16,8 +24,13 @@ type Props = {
   sizes?: string[];
 };
 
-export function MarkdownField({ name, label, defaultValue = "", rows = 5, placeholder, sizes = [] }: Props) {
-  const [value, setValue] = useState(defaultValue);
+export function MarkdownField({ name, id, label, hideLabel, onValueChange, renderPreview, defaultValue = "", rows = 5, placeholder, sizes = [] }: Props) {
+  const [value, setValueState] = useState(defaultValue);
+  const fieldId = id ?? name ?? label;
+  const setValue = (v: string) => {
+    setValueState(v);
+    onValueChange?.(v);
+  };
   const [preview, setPreview] = useState(false);
   const ta = useRef<HTMLTextAreaElement>(null);
 
@@ -76,8 +89,8 @@ export function MarkdownField({ name, label, defaultValue = "", rows = 5, placeh
 
   return (
     <div>
-      <div className="mb-1 flex items-center justify-between gap-2">
-        <label className="label !mb-0" htmlFor={name}>{label}</label>
+      <div className={`mb-1 flex items-center gap-2 ${hideLabel ? "justify-end" : "justify-between"}`}>
+        <label className={hideLabel ? "sr-only" : "label !mb-0"} htmlFor={fieldId}>{label}</label>
         <div className="flex rounded border border-line bg-white p-0.5 text-xs">
           <button type="button" onClick={() => setPreview(false)} className={`flex items-center gap-1 rounded px-2 py-1 ${!preview ? "bg-ink text-white" : "hover:bg-canvas"}`}>
             <Pencil className="h-3 w-3" /> Yaz
@@ -89,11 +102,11 @@ export function MarkdownField({ name, label, defaultValue = "", rows = 5, placeh
       </div>
 
       {/* Değer her zaman forma gider (önizleme modunda da) */}
-      <input type="hidden" name={name} value={value} />
+      {name && <input type="hidden" name={name} value={value} />}
 
       {preview ? (
         <div className="min-h-24 rounded border border-line bg-canvas p-3">
-          {value.trim() ? <Markdown>{value}</Markdown> : <p className="text-sm text-muted">Henüz bir şey yazılmadı.</p>}
+          {value.trim() ? (renderPreview ? renderPreview(value) : <Markdown>{value}</Markdown>) : <p className="text-sm text-muted">Henüz bir şey yazılmadı.</p>}
         </div>
       ) : (
         <div className="rounded border border-line bg-white focus-within:border-ink">
@@ -106,7 +119,7 @@ export function MarkdownField({ name, label, defaultValue = "", rows = 5, placeh
           </div>
           <textarea
             ref={ta}
-            id={name}
+            id={fieldId}
             rows={rows}
             value={value}
             onChange={(e) => setValue(e.target.value)}
