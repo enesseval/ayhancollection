@@ -20,6 +20,8 @@ for (const path of PAGES) {
   test(`erişilebilirlik: ${path}`, async ({ page }) => {
     if (path === "/sepet") await addToCart(page, "vizon-uzun-tunik", { size: "40" });
     await page.goto(path);
+    // Sepet özeti hesaplanırken soluk gösterilir; denetim son hal üzerinde yapılmalı
+    if (path === "/sepet") await expect(page.getByRole("link", { name: "Güvenli ödemeye geç" })).toBeVisible();
     const summary = await audit(page);
     expect(summary, summary.join("\n")).toEqual([]);
   });
